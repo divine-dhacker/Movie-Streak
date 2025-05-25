@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="og:title" content="Movie streak">
+    <meta property="og:description" content="Trust Me, The link is safe, just share to your friends so we can know the name of movies they've watched.">
+   <meta property="og:image" content="logo.png">                      
+    <!-- <meta property="og:url" content="https://example.com">
+ -->
+  <title>Movie Streak</title>
+  
+  <link rel="stylesheet" href="simpledesign.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="icon" href="logos.png" type="image/png">
+  
+  
+  <style>
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+body {
+  font-family: 'Orbitron', sans-serif;
+  background: #0e0e0e;
+  color: #ffffff;
+  text-align: center;
+  padding: 25px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: 480px;
+  margin: auto;
+  background: #1a1a1a;
+  border-radius: 16px;
+  padding: 15px;
+  box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
+}
+
+h1 {
+  font-size: 1.8em;
+  margin-bottom: 25px;
+  color: #00ffff;
+  text-shadow: 0 0 6px #00ffff80;
+}
+
+input {
+  width: 80%;
+  padding: 12px;
+  font-size: 15px;
+  border: none;
+  border-radius: 8px;
+  background: #121212;
+  color: #00ffff;
+  margin-bottom: 20px;
+  outline: none;
+  box-shadow: 0 0 8px #00ffff20;
+  transition: box-shadow 0.3s ease;
+}
+
+input:focus {
+  box-shadow: 0 0 12px #00ffff60;
+}
+
+button {
+  padding: 10px 20px;
+  font-size: 15px;
+  background: #00ffff;
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 0 12px #00ffff30;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: #00e6e6;
+  transform: scale(1.04);
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 30px;
+}
+
+ul li {
+  background: #191919;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  color: #00e6e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #00ffff80;
+}
+
+ul li button {
+  background: transparent;
+  color: #00ffff;
+  border: 1px solid #00ffff40;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+ul li button:hover {
+  background: #00ffff20;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #121212;
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 320px;
+  box-shadow: 0 0 20px #00ffff30;
+  text-align: center;
+}
+
+.modal-content h3 {
+  margin-bottom: 15px;
+  color: #00ffff;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  background: #1a1a1a;
+  color: #00ffff;
+  border: none;
+  outline: none;
+  margin-bottom: 20px;
+}
+
+.modal-buttons button {
+  margin: 0 6px;
+  padding: 8px 18px;
+  border: none;
+  border-radius: 6px;
+  background-color: #00ffff;
+  color: #000;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modal-buttons button:hover {
+  background-color: #00e6e6;
+}
+
+
+
+
+
+
+/* Minimal */
+
+
+
+/* From Chatgpt */
+
+#movieList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-auto-rows: 10px;
+  gap: 20px;
+  padding: 1rem;
+  max-width: 960px;
+  margin: 0 auto;
+  flex-grow: 1;
+}
+
+.movie-card {
+  background: #121212;
+  color: #00ffff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 0 12px #00ffff40;
+  display: block;
+  grid-row-end: span 10; /* This will be overridden by JS below */
+  flex-grow: 1;
+}
+
+
+/* Stronger zoom and clarity for mobile */
+body {
+  font-size: 1.3rem;
+  zoom: 1.5; /* Stronger zoom effect */
+  line-height: 1.6;
+}
+
+.container {
+  transform: scale(1.15);
+  transform-origin: top center;
+  padding: 25px;
+  max-width: 80%;
+  box-sizing: border-box;
+  margin-bottom: 6em;
+}
+
+/* Resize input and button for clarity */
+input {
+  font-size: 1.2rem;
+  padding: 16px;
+}
+
+button {
+  font-size: 1.1rem;
+  padding: 14px 26px;
+}
+
+/* Header font even bigger */
+h1 {
+  font-size: 2.6rem !important;
+  margin-bottom: 30px;
+}
+
+/* Movie list tags */
+#movieList li,
+.movie-card {
+  font-size: 1.2rem;
+  padding: 16px 20px;
+}
+
+/* Style for small screens */
+@media screen and (max-width: 480px) {
+  body {
+    zoom: 1.6;
+  }
+
+  h1 {
+    font-size: 2.8rem;
+  }
+
+  input,
+  button {
+    width: 90%;
+  }
+
+  #movieList {
+    flex-direction: column;
+    align-items: center;
+  }
+}
+
+
+.other-movie {
+  border-left: 5px solid red;
+  /* optional subtle background */
+  padding-left: 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+}
+
+ /* Style for the popup */
+        .popup {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: none;
+        }
+
+        /* Style for the share button */
+        .share-button {
+            background: #4CAF50;
+            color: #fff;
+            text-shadow: 0 0 6px #00ffff80;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        /* Style for the popup content */
+        .popup-content {
+            text-align: center;
+        }
+        
+        
+        
+        
+
+
+  </style>
+  
+  
+</head>
+<body>
+    
+    <h1 style="font-size: 2.2rem; color: #0ff; text-shadow: 0 0 5px #0ff, 0 0 10px #0ff; margin: 20px 0;">
+  Movie Streak
+</h1>
+    
+  <div class="container">
+    <h1>Add a Movie</h1>
+    
+    <div id="checkCount" style="position: absolute; top: 10px; left: 10px; background: #444; color: white; padding: 6px 10px; border-radius: 50%;">
+  0
+</div>
+    
+    <input type="text" id="movieName" placeholder="Enter movie name">
+    <button onclick="submitMovie()">Submit</button>
+    
+    <div style="                                 
+  width: 90%;  
+  gap: 8px;
+  background: #191919;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  color: #00e6e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #00ffff80;
+    ">
+        
+        <div style="background-color: #00ffff; width: 5px; height: 53px; "></div>     
+        <div style="color: #00ffff; font-size: 12px; font-style: italic;">Type in the name of all the movies you can think of , it's just for fun , we are gathering top movies for the season , be kind enough to support our team. Thank you.</div>
+        
+    </div>
+    
+    
+    <ul id="checkCount"></ul>
+    
+
+<!-- list -->
+      
+     
+  
+</div>
+
+
+
+<ul id="movieList" class="grid" style="display: flex; flex-wrap: wrap; gap: 1rem; padding: 1rem;"></ul>
+
+  <div id="editModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Edit Movie Name</h3>
+    <input type="text" id="editInput">
+    <div class="modal-buttons">
+      <button onclick="confirmEdit()">Save</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Share -->
+
+<div class="popup" id="share-popup">
+        <div class="popup-content">
+            <button class="share-button" id="share-button">Share</button>
+        </div>
+    </div>
+    
+
+    
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
+    <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.min.js"></script>
+    
+    <script>
+        
+     let deviceId = localStorage.getItem("deviceId");
+if (!deviceId) {
+  deviceId = crypto.randomUUID(); // or use a custom random string
+  localStorage.setItem("deviceId", deviceId);
+}
+
+let checkedMovies = JSON.parse(localStorage.getItem("checkedMovies") || "[]");
+
+
+
+function toggleCheck(movieKey, iconElement) {
+  const index = checkedMovies.indexOf(movieKey);
+  if (index === -1) {
+    checkedMovies.push(movieKey);
+    iconElement.classList.remove("fa-circle");
+    iconElement.classList.add("fa-check-circle");
+  } else {
+    checkedMovies.splice(index, 1);
+    iconElement.classList.remove("fa-check-circle");
+    iconElement.classList.add("fa-circle");
+  }
+  localStorage.setItem("checkedMovies", JSON.stringify(checkedMovies));
+  updateCheckCount();
+}
+
+
+
+
+function updateCheckCount() {
+  document.getElementById('checkCount').textContent = checkedMovies.length;
+}
+
+
+// Firebase config — replace with your actual Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyAd_eJ8Y-rmBLae9dAEXLgT4oaK_PX3pMM",
+  authDomain: "moviespark-9663d.firebaseapp.com",
+  databaseURL: "https://moviespark-9663d-default-rtdb.europe-west1.firebasedatabase.app/",
+  projectId: "moviespark-9663d",
+  storageBucket: "moviespark-9663d.firebasestorage.app",
+  messagingSenderId: "827433785766",
+  appId: "1:827433785766:web:9b5cb5336011330b3dd767"
+};
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+
+
+function submitMovie() {
+  const movieInput = document.getElementById('movieName');
+  const movieName = movieInput.value.trim();
+
+  if (movieName) {
+    db.ref('movies').once('value', snapshot => {
+      let duplicateFound = false;
+      snapshot.forEach(child => {
+        const existingName = (child.val().name || '').toLowerCase();
+        if (existingName === movieName.toLowerCase()) {
+          duplicateFound = true;
+          return true;
+        }
+      });
+
+      if (duplicateFound) {
+        alert("That movie already exists!");
+      } else {
+        const movieRef = db.ref('movies').push();
+        movieRef.set({ 
+  name: movieName,
+  owner: deviceId,
+  timestamp: Date.now()
+})
+.then(() => {
+  movieInput.value = '';
+  loadMovies(); // <-- Add this line to refresh the list immediately
+})
+        .catch(error => {
+          console.error("Error saving movie:", error);
+        });
+      }
+    });
+  } else {
+    alert("Please enter a movie name.");
+  }
+}
+
+
+
+
+
+function loadMovies() {
+  db.ref('movies')
+    .orderByChild('watchCount') // Sort by watch count (ascending)
+    .once('value', snapshot => {
+      const movieList = document.getElementById('movieList');
+      movieList.innerHTML = '';
+
+      // Convert to array and reverse to make it descending
+      const moviesArray = [];
+      snapshot.forEach(child => {
+        moviesArray.push({ key: child.key, ...child.val() });
+      });
+      moviesArray.reverse(); // So most watched appear first
+
+      moviesArray.forEach(movie => {
+        const movieName = movie.name;
+        const movieKey = movie.key;
+        const ownerId = movie.owner || '';
+        const canModify = ownerId === deviceId;
+
+        const li = document.createElement('li');
+        
+        if (ownerId !== deviceId) {
+  li.classList.add('other-movie');
+    }
+        
+        li.innerHTML = `
+          <span>${movieName}</span>
+          
+          ${ownerId !== deviceId ? `
+            <i 
+              class="check-icon fas ${checkedMovies.includes(movieKey) ? 'fa-check-circle' : 'fa-circle'}"
+              onclick="toggleCheck('${movieKey}', this)"
+              style="margin-left: 8px; cursor: pointer; font-size: 22px;"
+              title="Mark as watched"
+            ></i>
+          ` : ''}
+          ${canModify ? `
+            <button onclick="editMovie('${movieKey}', '${movieName}')" title="Edit">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button onclick="deleteMovie('${movieKey}')" title="Delete">
+              <i class="fas fa-trash-alt"></i>
+            </button>
+          ` : ''}
+        `;
+        movieList.appendChild(li);
+      });
+    });
+}
+
+
+
+
+
+// Call this when the page loads
+window.addEventListener("DOMContentLoaded", () => {
+  loadMovies();
+  updateCheckCount();
+});
+
+
+function deleteMovie(movieKey) {
+  db.ref('movies/' + movieKey).remove()
+    .then(() => {
+      console.log("Movie deleted");
+      loadMovies();
+    })
+    .catch(error => {
+      console.error("Error deleting movie:", error);
+    });
+}
+
+
+function editMovie(movieKey, oldName) {
+  const newName = prompt("Edit movie name:", oldName);
+  if (newName && newName.trim() !== "") {
+    db.ref('movies/' + movieKey).update({ name: newName.trim() })
+      .then(() => {
+        console.log("Movie updated");
+        loadMovies();
+      })
+      .catch(error => {
+        console.error("Error updating movie:", error);
+      });
+  }
+}
+
+
+let currentEditKey = null;
+
+function editMovie(movieKey, oldName) {
+  currentEditKey = movieKey;
+  document.getElementById('editInput').value = oldName;
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function confirmEdit() {
+  const newName = document.getElementById('editInput').value.trim();
+  if (newName && currentEditKey) {
+    db.ref('movies/' + currentEditKey).update({ name: newName })
+      .then(() => {
+        closeModal();
+        console.log("Movie updated");
+      })
+      .catch(error => {
+        console.error("Error updating movie:", error);
+      });
+  }
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.add('hidden');
+  currentEditKey = null;
+}
+
+
+function resizeGridItems() {
+  const grid = document.getElementById('movieList');
+  const rowHeight = parseInt(window.getComputedStyle(grid).getPropertyValue('grid-auto-rows'));
+  const items = grid.querySelectorAll('.movie-card');
+
+  items.forEach(item => {
+    item.style.gridRowEnd = "span " + Math.ceil(item.getBoundingClientRect().height / rowHeight);
+  });
+}
+
+function resizeAfterDelay() {
+  requestAnimationFrame(() => {
+    setTimeout(resizeGridItems, 30);
+  });
+}
+
+    </script>
+    
+    <script>
+        
+ // Function to show the popup
+        function showPopup() {
+            document.getElementById("share-popup").style.display = "block";
+        }
+
+        // Function to hide the popup
+        function hidePopup() {
+            document.getElementById("share-popup").style.display = "none";
+        }
+
+ 
+setInterval(function() {
+  showPopup();
+  setTimeout(hidePopup, 5000); 
+}, 3000); 
+
+        // Share button click event
+        document.getElementById("share-button").addEventListener("click", function() {
+            // Check if the share API is supported
+            if (navigator.share) {
+                navigator.share({
+                    title: document.title,
+                    url: window.location.href
+                })
+                .then(() => console.log("Shared successfully"))
+                .catch((error) => console.log("Error sharing:", error));
+            } else {
+                // Fallback for browsers that don't support the share API
+                prompt("I just wanna know alot of movie name pwess 🥺 :", window.location.href);
+            }
+            hidePopup();
+        });
+
+        // Hide the popup when the user clicks outside of it
+        window.addEventListener("click", function(event) {
+            if (!event.target.closest(".popup")) {
+                hidePopup();
+            }
+        });
+    </script>
+  
+</body>
+</html>
