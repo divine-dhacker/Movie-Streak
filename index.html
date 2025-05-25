@@ -600,41 +600,43 @@ function resizeAfterDelay() {
     </script>
     
     <script>
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
 
   function showPopup() {
     document.getElementById("share-popup").style.display = "flex";
   }
 
-  function hidePopup() {
-    document.getElementById("share-popup").style.display = "none";
-  }
-
-  // Show the popup just once when the page loads
+  // Keep the popup always visible
   showPopup();
 
-  document.getElementById("share-button").addEventListener("click", function() {
+  document.getElementById("share-button").addEventListener("click", function () {
     if (navigator.share) {
       navigator.share({
-        title: document.title,
+        title: "Movie Streak",
+        text: "I just wanna know a lot of movie names please 🥺",
         url: window.location.href
       })
       .then(() => console.log("Shared successfully"))
       .catch((error) => console.log("Error sharing:", error));
     } else {
-      prompt("I just wanna know a lot of movie names please 🥺:", window.location.href);
+      prompt("Movie names 😂 is all i want :", window.location.href);
     }
-    hidePopup();
+
+    // Do not hide the popup anymore
+    // hidePopup();
   });
 
-  window.addEventListener("click", function(event) {
+  // Remove this block to stop hiding the popup on outside click
+  /*
+  window.addEventListener("click", function (event) {
     if (!event.target.closest(".popup")) {
       hidePopup();
     }
   });
+  */
 
 });
-</script>
+    </script>
   
 </body>
 </html>
