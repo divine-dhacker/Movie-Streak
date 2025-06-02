@@ -470,7 +470,7 @@ navigator.serviceWorker.register('firebase-messaging-sw.js')
   Notification.requestPermission().then((permission) => {
     if (permission === "granted") {
       messaging.getToken({
-        vapidKey: "YOUR_PUBLIC_VAPID_KEY_HERE"  // ⬅️ Replace with your actual VAPID key
+        vapidKey: "BDk-6UofwnDsjWZJRNp6js-iHxvjrOpTIj80R7AxpV7MIYZco8n253MOSdYPY5MCX7DydjHrUZqSKQ5S1JlLLSg"  // ⬅️ Replace with your actual VAPID key
       }).then((currentToken) => {
         if (currentToken) {
           console.log("Token:", currentToken);
