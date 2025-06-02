@@ -87,7 +87,6 @@ ul li {
   justify-content: space-between;
   align-items: center;
   border-left: 4px solid #00ffff80;
-  font-size: 30px;
 }
 
 ul li button {
@@ -175,14 +174,11 @@ ul li button:hover {
 
 #movieList {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  grid-auto-rows: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* ⬅ This line */
   gap: 20px;
   padding: 1rem;
   max-width: 960px;
   margin: 0 auto;
-  flex-grow: 1;
-  font-size: 30px;
 }
 
 .movie-card {
@@ -233,8 +229,8 @@ h1 {
 /* Movie list tags */
 #movieList li,
 .movie-card {
-  font-size: 1.2rem;
-  padding: 16px 20px;
+  font-size: 1rem;
+  padding: 12px 15px;
 }
 
 /* Style for small screens */
@@ -308,6 +304,10 @@ h1 {
 </div>
 
 
+<!-- notifications -->
+<div id="toast" style="display: none; position: fixed; bottom: 20px; right: 20px; background: #00ffff; color: #000; padding: 10px 16px; border-radius: 8px; font-weight: bold; box-shadow: 0 0 10px #00ffff60; z-index: 999;"></div>
+
+
 <!-- Share -->
 
 <div class="popup" id="share-popup">
@@ -319,7 +319,9 @@ h1 {
 
     
     <input type="text" id="movieName" placeholder="Enter movie name">
+    <!-- <input type="text" id="posterUrl" placeholder="Enter poster image URL"> -->
     <button onclick="submitMovie()">Submit</button>
+    
     
     <div style="                                 
   width: 90%;  
@@ -336,6 +338,29 @@ h1 {
     ">
         
         <div style="background-color: #00ffff; width: 5px; height: 53px; "></div>     
+      
+        <div style="color: #ff4900; font-size: 15px; font-style: italic;">It may take a few minutes to load movie name, please exercise patience ...</div>
+        
+    </div>
+    
+    
+    
+    <div style="                                 
+  width: 90%;  
+  gap: 8px;
+  background: #191919;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  color: #00e6e6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-left: 4px solid #00ffff80;
+    ">
+        
+        <div style="background-color: #00ffff; width: 5px; height: 53px; "></div>     
+      
         <div style="color: #00ffff; font-size: 15px; font-style: italic;">Type in the name of all the movies you can think of , It's just for fun, Thank you.</div>
         
     </div>
@@ -386,18 +411,30 @@ let checkedMovies = JSON.parse(localStorage.getItem("checkedMovies") || "[]");
 
 
 function toggleCheck(movieKey, iconElement) {
-  const index = checkedMovies.indexOf(movieKey);
-  if (index === -1) {
-    checkedMovies.push(movieKey);
-    iconElement.classList.remove("fa-circle");
-    iconElement.classList.add("fa-check-circle");
-  } else {
-    checkedMovies.splice(index, 1);
-    iconElement.classList.remove("fa-check-circle");
-    iconElement.classList.add("fa-circle");
-  }
-  localStorage.setItem("checkedMovies", JSON.stringify(checkedMovies));
-  updateCheckCount();
+  const movieRef = db.ref('movies/' + movieKey + '/likes');
+
+  movieRef.once('value', snapshot => {
+    const likes = snapshot.val() || {};
+    const hasLiked = likes[deviceId];
+
+    if (hasLiked) {
+      delete likes[deviceId];
+    } else {
+      likes[deviceId] = true;
+    }
+
+    movieRef.set(likes).then(() => {
+      // ✅ Show toast notification
+      if (hasLiked) {
+        showToast("Like removed");
+      } else {
+        showToast("You liked this movie ❤️");
+      }
+
+      // ✅ Refresh display
+      loadMovies();
+    });
+  });
 }
 
 
@@ -428,38 +465,69 @@ function submitMovie() {
   const movieInput = document.getElementById('movieName');
   const movieName = movieInput.value.trim();
 
-  if (movieName) {
-    db.ref('movies').once('value', snapshot => {
-      let duplicateFound = false;
-      snapshot.forEach(child => {
-        const existingName = (child.val().name || '').toLowerCase();
-        if (existingName === movieName.toLowerCase()) {
-          duplicateFound = true;
-          return true;
-        }
-      });
+  if (!movieName) {
+    alert("Please enter a movie name.");
+    return;
+  }
 
-      if (duplicateFound) {
-        alert("That movie already exists!");
-      } else {
-        const movieRef = db.ref('movies').push();
-        movieRef.set({ 
-  name: movieName,
-  owner: deviceId,
-  timestamp: Date.now()
-})
-.then(() => {
-  movieInput.value = '';
-  loadMovies(); // <-- Add this line to refresh the list immediately
-})
-        .catch(error => {
-          console.error("Error saving movie:", error);
-        });
+  // 1. Check for duplicate
+  db.ref('movies').once('value', snapshot => {
+    let duplicateFound = false;
+    snapshot.forEach(child => {
+      const existingName = (child.val().name || '').toLowerCase();
+      if (existingName === movieName.toLowerCase()) {
+        duplicateFound = true;
+        return true;
       }
     });
-  } else {
-    alert("Please enter a movie name.");
-  }
+
+    if (duplicateFound) {
+      alert("That movie already exists!");
+    } else {
+      // 2. Fetch poster from OMDb
+      const apiKey = "80cc8186";
+
+// Step 1: Try search with "s=" for close matches
+fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(movieName)}&apikey=${apiKey}`)
+  .then(response => response.json())
+  .then(data => {
+    if (data.Response === "True" && data.Search.length > 0) {
+      const firstMatch = data.Search[0]; // Take the first search result
+      const correctTitle = firstMatch.Title;
+
+      // Step 2: Use the correct title to get full info (and poster)
+      return fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(correctTitle)}&apikey=${apiKey}`);
+    } else {
+      throw new Error("No similar movie found.");
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.Response === "True") {
+      const posterUrl = data.Poster !== "N/A"
+  ? data.Poster
+  : "https://dummyimage.com/180x260/444/ffffff&text=No+Poster";
+
+      const movieRef = db.ref('movies').push();
+movieRef.set({
+  name: data.Title,
+  poster: posterUrl,
+  owner: deviceId,
+  timestamp: Date.now()
+}).then(() => {
+  document.getElementById('movieName').value = '';
+  loadMovies();
+      });
+    } else {
+      alert("Movie not found!");
+    }
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    alert("Couldn't find a similar movie.");
+  });
+    }
+  });
 }
 
 
@@ -480,42 +548,66 @@ function loadMovies() {
       });
       moviesArray.reverse(); // So most watched appear first
 
-      moviesArray.forEach(movie => {
-        const movieName = movie.name;
-        const movieKey = movie.key;
-        const ownerId = movie.owner || '';
-        const canModify = ownerId === deviceId;
+      moviesArray.forEach(async movie => {
+  const movieName = movie.name;
+  const movieKey = movie.key;
+  const ownerId = movie.owner || '';
+  const canModify = ownerId === deviceId;
+  const likesObj = movie.likes || {};
+  const likeCount =         Object.keys(likesObj).length;
+  const isLiked = !!likesObj[deviceId];
 
-        const li = document.createElement('li');
-        
-        if (ownerId !== deviceId) {
-  li.classList.add('other-movie');
-    }
-        
-        li.innerHTML = `
-          <span>${movieName}</span>
-          
-          ${ownerId !== deviceId ? `
-            <i 
-              class="check-icon fas ${checkedMovies.includes(movieKey) ? 'fa-check-circle' : 'fa-circle'}"
-              onclick="toggleCheck('${movieKey}', this)"
-              style="margin-left: 8px; cursor: pointer; font-size: 22px;"
-              title="Mark as watched"
-            ></i>
-          ` : ''}
-          ${canModify ? `
-            <button onclick="editMovie('${movieKey}', '${movieName}')" title="Edit">
-              <i class="fas fa-edit"></i>
-            </button>
-            <button onclick="deleteMovie('${movieKey}')" title="Delete">
-              <i class="fas fa-trash-alt"></i>
-            </button>
-          ` : ''}
-        `;
-        movieList.appendChild(li);
+  const posterUrl = await fetchPoster(movieName); // ✅ Get poster
+
+  const li = document.createElement('li');
+  if (ownerId !== deviceId) li.classList.add('other-movie');
+
+  li.innerHTML = `
+    <div style="display: flex; flex-direction: column; align-items: center;">
+      <img src="${posterUrl}" alt="" style="width: 100%; max-width: 180px; border-radius: 8px; margin-bottom: 10px;">
+      
+      <div style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px;">
+        <span style="font-weight: bold; color: #00ffff;">${movieName}</span>
+        ${ownerId !== deviceId ? `
+          <i 
+  class="check-icon fas ${isLiked ? 'fa-heart-circle-check' : 'fa-heart'}"
+  style="cursor: pointer; font-size: 22px; ${isLiked ? 'color: red;' : ''}"
+  onclick="toggleCheck('${movieKey}', this)"
+  title="Mark as watched"
+></i>
+<span style="color: #0ff; font-size: 14px; margin-left: 6px;">${likeCount}</span>
+        ` : ''}
+      </div>
+
+      <div style="margin-top: 8px;">
+        ${canModify ? `
+          <button onclick="editMovie('${movieKey}', '${movieName}')" title="Edit">
+            <i class="fas fa-edit"></i>
+          </button>
+          <button onclick="deleteMovie('${movieKey}')" title="Delete">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  movieList.appendChild(li);
       });
     });
 }
+
+
+
+
+async function fetchPoster(movieName) {
+  const apiKey = '80cc8186'; // Replace with your real key
+  const response = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(movieName)}&apikey=${apiKey}`);
+  const data = await response.json();
+  return data.Poster && data.Poster !== "N/A" ? data.Poster : "https://via.placeholder.com/180x260?text=No+Poster";
+}
+
+
 
 
 
@@ -597,6 +689,25 @@ function resizeAfterDelay() {
   requestAnimationFrame(() => {
     setTimeout(resizeGridItems, 30);
   });
+}
+
+<!-- notification -->
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  toast.style.display = "block";
+  toast.style.opacity = 1;
+
+  setTimeout(() => {
+    toast.style.transition = "opacity 1s";
+    toast.style.opacity = 0;
+  }, 1500);
+
+  setTimeout(() => {
+    toast.style.display = "none";
+    toast.style.transition = "none";
+  }, 2500);
 }
 
     </script>
