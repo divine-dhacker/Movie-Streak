@@ -461,6 +461,43 @@ const db = firebase.database();
 
 
 
+// Register service worker first
+navigator.serviceWorker.register('firebase-messaging-sw.js')
+.then((registration) => {
+  const messaging = firebase.messaging();
+  messaging.useServiceWorker(registration);
+
+  Notification.requestPermission().then((permission) => {
+    if (permission === "granted") {
+      messaging.getToken({
+        vapidKey: "YOUR_PUBLIC_VAPID_KEY_HERE"  // ⬅️ Replace with your actual VAPID key
+      }).then((currentToken) => {
+        if (currentToken) {
+          console.log("Token:", currentToken);
+          db.ref('tokens/' + deviceId).set(currentToken);
+        } else {
+          console.warn("No registration token available.");
+        }
+      }).catch((err) => {
+        console.error("An error occurred while retrieving token.", err);
+      });
+
+      messaging.onMessage((payload) => {
+        console.log("Push received in foreground:", payload);
+        alert(`${payload.notification.title}: ${payload.notification.body}`);
+      });
+
+    } else {
+      console.warn("Notifications not allowed by user.");
+    }
+  });
+})
+.catch((err) => {
+  console.error("Service Worker registration failed:", err);
+});
+
+      
+
 function submitMovie() {
   const movieInput = document.getElementById('movieName');
   const movieName = movieInput.value.trim();
