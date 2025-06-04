@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Notification Example</title>
+</head>
+<body>
+  <button>Show Notification</button>
+
+  <script>
+    // Ask for permission as soon as the page loads
+    window.addEventListener("load", () => {
+      if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+          if (permission !== "granted") {
+            alert("Please allow notifications to use this feature.");
+          }
+        });
+      } else {
+        alert("Your browser does not support notifications.");
+      }
+    });
+
+    const button = document.querySelector("button");
+
+    button.addEventListener("click", () => {
+      if (Notification.permission === "granted") {
+        const notification = new Notification("Example", {
+          body: "This is more text.",
+          data: { hello: "world" },
+          icon: "Logo Centered.png",
+          tag: "Welcome Message"
+        });
+
+        notification.addEventListener("error", () => {
+          alert("Notification error");
+        });
+      } else {
+        alert("Notifications are not allowed. Please allow them and reload the page.");
+      }
+    });
+  </script>
+</body>
+</html>
