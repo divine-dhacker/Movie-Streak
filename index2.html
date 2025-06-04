@@ -1,23 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Notification Example</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notification Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      height: 100vh;
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    button {
+      padding: 15px 35px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    }
+
+    @media (max-width: 600px) {
+      button {
+        font-size: 1rem;
+        padding: 12px 25px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <button>Show Notification</button>
+  <button>🔔 Show Notification</button>
 
   <script>
-    // Ask for permission as soon as the page loads
+    // Request permission when the page loads
     window.addEventListener("load", () => {
-      if ("Notification" in window) {
+      if (!("Notification" in window)) {
+        alert("Your browser does not support notifications.");
+      } else {
         Notification.requestPermission().then(permission => {
-          if (permission !== "granted") {
-            alert("Please allow notifications to use this feature.");
+          if (permission === "denied") {
+            alert("You blocked notifications. Please allow them in settings.");
           }
         });
-      } else {
-        alert("Your browser does not support notifications.");
       }
     });
 
@@ -25,18 +70,17 @@
 
     button.addEventListener("click", () => {
       if (Notification.permission === "granted") {
-        const notification = new Notification("Example", {
-          body: "This is more text.",
-          data: { hello: "world" },
-          icon: "Logo Centered.png",
-          tag: "Welcome Message"
+        const notification = new Notification("🎉 Welcome Divine!", {
+          body: "This is your awesome notification. Keep building!",
+          icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_Centered.png/600px-Logo_Centered.png",
+          tag: "divine-welcome"
         });
 
         notification.addEventListener("error", () => {
-          alert("Notification error");
+          alert("Oops! Something went wrong with the notification.");
         });
       } else {
-        alert("Notifications are not allowed. Please allow them and reload the page.");
+        alert("Please allow notification permissions.");
       }
     });
   </script>
