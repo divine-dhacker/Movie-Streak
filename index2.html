@@ -53,36 +53,25 @@
   <button>🔔 Show Notification</button>
 
   <script>
-    // Request permission when the page loads
-    window.addEventListener("load", () => {
-      if (!("Notification" in window)) {
-        alert("Your browser does not support notifications.");
-      } else {
+    function showNotification() {
+      if (Notification.permission === 'granted') {
+        new Notification('Hello Divine!', {
+          body: 'This is a test notification.',
+          icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_Centered.png/600px-Logo_Centered.png'
+        });
+      } else if (Notification.permission !== 'denied') {
         Notification.requestPermission().then(permission => {
-          if (permission === "denied") {
-            alert("You blocked notifications. Please allow them in settings.");
+          if (permission === 'granted') {
+            new Notification('Hello Divine!', {
+              body: 'This is a test notification.',
+              icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_Centered.png/600px-Logo_Centered.png'
+            });
           }
         });
-      }
-    });
-
-    const button = document.querySelector("button");
-
-    button.addEventListener("click", () => {
-      if (Notification.permission === "granted") {
-        const notification = new Notification("🎉 Welcome Divine!", {
-          body: "This is your awesome notification. Keep building!",
-          icon: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Logo_Centered.png/600px-Logo_Centered.png",
-          tag: "divine-welcome"
-        });
-
-        notification.addEventListener("error", () => {
-          alert("Oops! Something went wrong with the notification.");
-        });
       } else {
-        alert("Please allow notification permissions.");
+        alert('Please enable notifications in your browser settings.');
       }
-    });
+    }
   </script>
 </body>
 </html>
