@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Reels</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+        :root {
+            --bg-color: #0b0f1a;
+            --card-bg: #1a2035;
+            --accent-color: #ffe066;
+            --text-color: #e0e6f0;
+            --secondary-text: #a0a8b9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-color);
+            color: var(--text-color);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+        }
+
+        /* Hamburger Menu Styles */
+        .hamburger-menu {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+            cursor: pointer;
+            z-index: 50;
+        }
+
+        .menu-panel {
+            position: fixed;
+            top: 0;
+            left: -250px;
+            width: 250px;
+            height: 100vh;
+            background: var(--card-bg);
+            color: var(--text-color);
+            z-index: 40;
+            transition: transform 0.3s ease-in-out;
+            padding: 2rem;
+        }
+
+        .menu-panel.open {
+            transform: translateX(250px);
+        }
+
+        .menu-panel h2 {
+            margin-bottom: 1rem;
+            color: var(--accent-color);
+        }
+
+        .menu-panel ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .menu-panel ul li {
+            padding: 0.7rem 0;
+            border-bottom: 1px solid #2c334d;
+        }
+
+        .menu-panel ul li:last-child {
+            border-bottom: none;
+        }
+
+        .menu-panel a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        /* Pull-to-Refresh Styles */
+        .pull-to-refresh {
+            position: absolute;
+            top: -50px;
+            left: 0;
+            width: 100%;
+            height: 50px;
+            background: var(--card-bg);
+            color: var(--secondary-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            z-index: 30;
+        }
+
+        .pull-to-refresh.refreshing {
+            transform: translateY(50px);
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader {
+            border: 5px solid #3d4a66;
+            border-top: 5px solid var(--accent-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-message {
+            margin-top: 1rem;
+            font-size: 1rem;
+            color: var(--secondary-text);
+        }
+
+        .reels-container {
+            width: 100%;
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
+        }
+
+        .reel-item {
+            width: 100%;
+            height: 100vh;
+            scroll-snap-align: start;
+            position: relative;
+            background: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        
+        .reel-video, .reel-iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: black;
+        }
+
+        .reel-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent 30%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 2rem 1.5rem;
+            z-index: 20;
+        }
+
+        .reel-info {
+            text-align: left;
+            z-index: 20;
+        }
+
+        .reel-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .reel-description {
+            font-size: 0.9rem;
+            color: var(--secondary-text);
+            margin-bottom: 1rem;
+            max-height: 4.5em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+
+        .reel-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: absolute;
+            bottom: 2rem;
+            right: 1.5rem;
+            z-index: 20;
+        }
+
+        .action-button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            transition: transform 0.2s ease, background 0.2s ease;
+        }
+
+        .action-button:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .action-button i {
+            font-size: 1.5rem;
+            color: var(--text-color);
+        }
+
+        .like-button .fa-heart {
+            color: var(--text-color);
+            transition: color 0.2s;
+        }
+
+        .like-button .fa-heart.liked {
+            color: var(--accent-color);
+        }
+
+        .reel-logo {
+            position: absolute;
+            top: 1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-color);
+            z-index: 20;
+        }
+        
+        /* Video Controls */
+        .video-controls-container {
+            position: absolute;
+            bottom: 1rem;
+            left: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+            z-index: 20;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        .reel-item.playing .video-controls-container {
+            opacity: 1;
+        }
+
+        .video-controls-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .video-controls-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .progress-bar-container {
+            flex-grow: 1;
+            height: 4px;
+            background-color: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        .control-button {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-color);
+        }
+
+        .control-button i {
+            font-size: 1.2rem;
+        }
+
+        /* Interactive Play Overlay */
+        .play-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 30;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .play-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .play-button-large {
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid var(--accent-color);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        .play-button-large .fa-play {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            transform: translateX(4px);
+        }
+
+        .play-overlay-text {
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .play-overlay-text .unmute-icon {
+            margin-left: 5px;
+            font-size: 1rem;
+            color: var(--accent-color);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loader"></div>
+        <p class="loading-message">Finding awesome reels for you...</p>
+    </div>
+
+    <div class="hamburger-menu">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <div class="menu-panel">
+        <h2>Menu</h2>
+        <ul>
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Movies</a></li>
+            <li><a href="#">TV Shows</a></li>
+            <li><a href="#">Bookmarks</a></li>
+            <li><a href="#">Settings</a></li>
+        </ul>
+    </div>
+
+    <div class="pull-to-refresh" id="pullToRefresh">
+        <i class="fas fa-sync-alt fa-spin" style="margin-right: 0.5rem; display: none;"></i> Refreshing...
+    </div>
+    
+    <div class="reels-container" id="reelsContainer" style="display: none;">
+        </div>
+
+    <div class="reel-logo">Movie Streak</div>
+
+    <script>
+        const reelsContainer = document.getElementById('reelsContainer');
+        const loadingScreen = document.getElementById('loadingScreen');
+        const pullToRefresh = document.getElementById('pullToRefresh');
+        const hamburgerMenu = document.querySelector('.hamburger-menu');
+        const menuPanel = document.querySelector('.menu-panel');
+        let isLoading = false;
+        let moviePage = 1;
+        let allMovies = [];
+        let currentPlayingVideo = null;
+        
+        // ====================================================================
+        //  ACTION REQUIRED: Replace this with your actual TMDb API key!
+        // ====================================================================
+        const apiKey = "05d7badb06e5f091941f127ce4bc8947";
+        
+        const imageBaseUrl = "https://image.tmdb.org/t/p/w500";
+        const placeholderVideo = "https://assets.mixkit.co/videos/preview/mixkit-futuristic-car-on-a-highway-at-dusk-33433-large.mp4";
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        async function getMovieTrailer(movieId) {
+            try {
+                const response = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/videos?api_key=${apiKey}&language=en-US`);
+                const data = await response.json();
+                const trailer = data.results.find(video => video.type === "Trailer" && video.site === "YouTube");
+                return trailer ? `https://www.youtube.com/embed/${trailer.key}?autoplay=1&mute=1&loop=1&playlist=${trailer.key}&controls=0&modestbranding=1&rel=0&showinfo=0&iv_load_policy=3&enablejsapi=1` : null;
+            } catch (error) {
+                console.error("Error fetching trailer:", error);
+                return null;
+            }
+        }
+        
+        function handleControls(reelItem, videoEl) {
+            const playOverlay = reelItem.querySelector('.play-overlay');
+            const volumeBtn = reelItem.querySelector('.volume-button');
+            const progressBar = reelItem.querySelector('.progress-bar');
+            const fullscreenBtn = reelItem.querySelector('.fullscreen-button');
+            
+            const startPlaying = () => {
+                videoEl.muted = false; // Unmute with user click
+                videoEl.play().then(() => {
+                    playOverlay.classList.add('hidden');
+                    reelItem.classList.add('playing');
+                    volumeBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                }).catch(e => console.error("Play prevented:", e));
+            };
+
+            const pauseVideo = () => {
+                videoEl.pause();
+                playOverlay.classList.remove('hidden');
+                reelItem.classList.remove('playing');
+            };
+
+            playOverlay.addEventListener('click', startPlaying);
+
+            reelItem.addEventListener('click', () => {
+                if (reelItem.classList.contains('playing')) {
+                    pauseVideo();
+                } else {
+                    startPlaying();
+                }
+            });
+
+            volumeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                videoEl.muted = !videoEl.muted;
+                volumeBtn.innerHTML = videoEl.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            });
+
+            videoEl.addEventListener('timeupdate', () => {
+                const progress = (videoEl.currentTime / videoEl.duration) * 100;
+                progressBar.style.width = `${progress}%`;
+            });
+
+            progressBar.parentElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const rect = progressBar.parentElement.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const newTime = (clickX / rect.width) * videoEl.duration;
+                videoEl.currentTime = newTime;
+            });
+
+            fullscreenBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (videoEl.requestFullscreen) {
+                    videoEl.requestFullscreen();
+                } else if (videoEl.webkitRequestFullscreen) {
+                    videoEl.webkitRequestFullscreen();
+                }
+            });
+        }
+
+        function createReelItem(movie) {
+            const reelItem = document.createElement('div');
+            reelItem.className = 'reel-item';
+
+            let videoElement;
+            const isYouTube = !!movie.trailerUrl;
+
+            if (isYouTube) {
+                const iframe = document.createElement('iframe');
+                iframe.className = 'reel-iframe';
+                iframe.setAttribute('src', movie.trailerUrl);
+                iframe.setAttribute('frameborder', '0');
+                iframe.setAttribute('allow', 'autoplay; encrypted-media');
+                iframe.setAttribute('allowfullscreen', 'true');
+                videoElement = iframe;
+            } else {
+                const video = document.createElement('video');
+                video.className = 'reel-video';
+                video.poster = `${imageBaseUrl}${movie.backdrop_path}`;
+                video.loop = true;
+                video.muted = true;
+                video.playsInline = true;
+                video.src = placeholderVideo;
+                videoElement = video;
+            }
+
+            reelItem.innerHTML = `
+                <div class="reel-overlay">
+                    <div class="reel-info">
+                        <h2 class="reel-title">${movie.title}</h2>
+                        <p class="reel-description">${movie.overview}</p>
+                    </div>
+                </div>
+                <div class="reel-actions">
+                    <button class="action-button like-button"><i class="far fa-heart"></i></button>
+                    <button class="action-button bookmark-button"><i class="far fa-bookmark"></i></button>
+                </div>
+                <div class="play-overlay">
+                    <div class="play-button-large">
+                        <i class="fas fa-play"></i>
+                    </div>
+                    <p class="play-overlay-text">Tap to Play with Sound</p>
+                </div>
+                <div class="video-controls-container">
+                    <div class="control-button prev-button"><i class="fas fa-chevron-up"></i></div>
+                    <div class="video-controls-left">
+                        <div class="control-button volume-button"><i class="fas fa-volume-mute"></i></div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar"></div>
+                    </div>
+                    <div class="video-controls-right">
+                        <div class="control-button fullscreen-button"><i class="fas fa-expand"></i></div>
+                    </div>
+                    <div class="control-button next-button"><i class="fas fa-chevron-down"></i></div>
+                </div>
+            `;
+            
+            reelItem.insertBefore(videoElement, reelItem.firstChild);
+
+            const likeButton = reelItem.querySelector('.like-button');
+            const bookmarkButton = reelItem.querySelector('.bookmark-button');
+            const nextButton = reelItem.querySelector('.next-button');
+            const prevButton = reelItem.querySelector('.prev-button');
+            const playOverlay = reelItem.querySelector('.play-overlay');
+
+            likeButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const heartIcon = likeButton.querySelector('.fa-heart');
+                heartIcon.classList.toggle('liked');
+                heartIcon.classList.toggle('fas');
+                heartIcon.classList.toggle('far');
+            });
+
+            bookmarkButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const bookmarkIcon = bookmarkButton.querySelector('.fa-bookmark');
+                bookmarkIcon.classList.toggle('fas');
+                bookmarkIcon.classList.toggle('far');
+            });
+
+            nextButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const nextReel = reelItem.nextElementSibling;
+                if (nextReel) {
+                    nextReel.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+
+            prevButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const prevReel = reelItem.previousElementSibling;
+                if (prevReel) {
+                    prevReel.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+            
+            if (isYouTube) {
+                playOverlay.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    playOverlay.classList.add('hidden');
+                    reelItem.classList.add('playing');
+                    videoElement.contentWindow.postMessage('{"event":"command","func":"playVideo"}', '*');
+                    videoElement.contentWindow.postMessage('{"event":"command","func":"unMute"}', '*');
+                });
+            } else {
+                handleControls(reelItem, videoElement);
+            }
+
+            return reelItem;
+        }
+
+        let currentReel = null;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const reelItem = entry.target;
+                const videoEl = reelItem.querySelector('.reel-video');
+                const iframeEl = reelItem.querySelector('.reel-iframe');
+                
+                if (entry.isIntersecting) {
+                    currentReel = reelItem;
+                    if (videoEl) {
+                        videoEl.pause();
+                        videoEl.currentTime = 0;
+                    }
+                    if (iframeEl) {
+                        iframeEl.contentWindow.postMessage('{"event":"command","func":"pauseVideo"}', '*');
+                    }
+                } else {
+                    if (videoEl) {
+                        videoEl.pause();
+                        videoEl.currentTime = 0;
+                    }
+                    if (iframeEl) {
+                        iframeEl.contentWindow.postMessage('{"event":"command","func":"pauseVideo"}', '*');
+                    }
+                }
+            });
+        }, { threshold: 0.5 });
+
+        async function fetchMovies(page = 1, isRefresh = false) {
+            if (isLoading) return;
+            isLoading = true;
+            
+            if (isRefresh) {
+                reelsContainer.innerHTML = '';
+                allMovies = [];
+            }
+            loadingScreen.style.opacity = 1;
+            loadingScreen.style.pointerEvents = 'auto';
+
+            try {
+                const response = await fetch(`https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=en-US&page=${page}`);
+                const data = await response.json();
+                
+                const movies = data.results.filter(movie => movie.backdrop_path);
+                
+                const trailerPromises = movies.map(async movie => {
+                    try {
+                        const trailerUrl = await getMovieTrailer(movie.id);
+                        return { ...movie, trailerUrl };
+                    } catch (error) {
+                        console.error("Error fetching trailer for a movie:", error);
+                        return { ...movie, trailerUrl: null };
+                    }
+                });
+                
+                const moviesWithTrailers = await Promise.all(trailerPromises);
+                
+                allMovies = allMovies.concat(moviesWithTrailers);
+                
+                const shuffledMovies = shuffleArray(moviesWithTrailers);
+                
+                if (isRefresh) {
+                    reelsContainer.innerHTML = '';
+                }
+                
+                shuffledMovies.forEach(movie => {
+                    const reelItem = createReelItem(movie);
+                    reelsContainer.appendChild(reelItem);
+                    observer.observe(reelItem);
+                });
+                
+                reelsContainer.style.display = 'block';
+
+                moviePage = data.page;
+
+            } catch (error) {
+                console.error("Error fetching popular movies:", error);
+            } finally {
+                isLoading = false;
+                loadingScreen.style.opacity = 0;
+                loadingScreen.style.pointerEvents = 'none';
+                pullToRefresh.classList.remove('refreshing');
+            }
+        }
+
+        reelsContainer.addEventListener('scroll', () => {
+            if (!isLoading && reelsContainer.scrollTop + reelsContainer.clientHeight >= reelsContainer.scrollHeight - 50) {
+                fetchMovies(moviePage + 1);
+            }
+        });
+
+        hamburgerMenu.addEventListener('click', () => {
+            menuPanel.classList.toggle('open');
+        });
+
+        let touchStartY = 0;
+        let isPulling = false;
+
+        reelsContainer.addEventListener('touchstart', (e) => {
+            if (reelsContainer.scrollTop === 0 && !isLoading) {
+                touchStartY = e.touches[0].clientY;
+                isPulling = true;
+            }
+        });
+
+        reelsContainer.addEventListener('touchmove', (e) => {
+            if (!isPulling) return;
+            let touchMoveY = e.touches[0].clientY;
+            let distance = touchMoveY - touchStartY;
+            if (distance > 0 && distance < 50) {
+                pullToRefresh.style.transform = `translateY(${distance}px)`;
+            } else if (distance >= 50) {
+                pullToRefresh.style.transform = `translateY(50px)`;
+                pullToRefresh.classList.add('refreshing');
+            }
+        });
+
+        reelsContainer.addEventListener('touchend', () => {
+            if (isPulling) {
+                if (pullToRefresh.classList.contains('refreshing')) {
+                    fetchMovies(1, true);
+                }
+                isPulling = false;
+                pullToRefresh.style.transform = `translateY(0)`;
+                pullToRefresh.classList.remove('refreshing');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMovies(1);
+        });
+    </script>
+</body>
+</html>
