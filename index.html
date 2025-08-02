@@ -1010,7 +1010,19 @@
       </div>
     </div>
   </div>
-  
+  <div id="authModal" class="modal">
+    <div class="modal-content">
+        <i class="fas fa-times modal-close-btn" onclick="closeModal('authModal')"></i>
+        <h3>Sign in to Movie Streak</h3>
+        <form id="authForm">
+            <input type="email" id="emailInput" placeholder="Enter your email" required>
+            <div id="authMessage" class="auth-message" style="display: none;"></div>
+            <div class="modal-buttons">
+                <button type="submit">Send Sign-in Link</button>
+            </div>
+        </form>
+    </div>
+</div>
 
   <div id="profileModal" class="modal">
       <div class="modal-content profile-modal-content">
