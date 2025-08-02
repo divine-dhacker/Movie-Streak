@@ -1011,17 +1011,6 @@
     </div>
   </div>
   
-  <div id="loginModal" class="modal visible">
-      <div class="modal-content">
-          <h3>Welcome to Movie Streak!</h3>
-          <p>Enter a name and password to get started. If the name exists, you'll be logged in.</p>
-          <div style="display: flex; flex-direction: column; gap: 1rem;">
-              <input type="text" id="loginNameInput" placeholder="Enter a name" required>
-              <input type="password" id="loginPasswordInput" placeholder="Enter a password" required>
-              <button onclick="handleLoginButtonClick()">Continue</button>
-          </div>
-      </div>
-  </div>
 
   <div id="profileModal" class="modal">
       <div class="modal-content profile-modal-content">
@@ -1043,6 +1032,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
+  <script src="auth.js"></script>
 
   <script>
     // --- Firebase Configuration and Initialization ---
@@ -1777,20 +1767,6 @@
 
     // --- Login/Signup and Profile Functions ---
     
-    // NEW: Function to generate a simple avatar
-    function generateAvatarUrl(name) {
-        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4a90e2&color=fff&size=128&bold=true&font-size=0.5`;
-    }
-
-    function showLoginModal() {
-        document.getElementById('loginModal').classList.add('visible');
-    }
-
-    function closeLoginModal() {
-        document.getElementById('loginModal').classList.remove('visible');
-    }
-    
     function showProfileModal() {
         if (!currentUserId) return;
         document.getElementById('profilePicModal').src = currentUserPic;
@@ -1805,68 +1781,9 @@
     }
     
     function logout() {
-        localStorage.removeItem("currentUserId");
-        localStorage.removeItem("currentUserName");
-        localStorage.removeItem("currentUserPic");
-        location.reload();
+        auth.signOut();
     }
 
-    async function handleLoginButtonClick() {
-        const name = document.getElementById('loginNameInput').value.trim();
-        const password = document.getElementById('loginPasswordInput').value.trim();
-
-        if (!name || !password) {
-            showToast("Please enter a name and password.");
-            return;
-        }
-
-        const usersRef = db.ref('users');
-        const snapshot = await usersRef.orderByChild('name').equalTo(name).once('value');
-
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-            const userKey = Object.keys(userData)[0];
-            const user = userData[userKey];
-
-            if (user.password === password) {
-                currentUserId = userKey;
-                currentUserName = user.name;
-                currentUserPic = user.picUrl;
-                localStorage.setItem("currentUserId", currentUserId);
-                localStorage.setItem("currentUserName", currentUserName);
-                localStorage.setItem("currentUserPic", currentUserPic);
-                closeLoginModal();
-                loadMovies();
-                showMainAppUI();
-                showToast(`Welcome back, ${currentUserName}!`);
-            } else {
-                showToast("Incorrect password. Please try again.");
-            }
-        } else {
-            const newUserRef = usersRef.push();
-            const newUserId = newUserRef.key;
-            
-            const newPicUrl = generateAvatarUrl(name);
-
-            await newUserRef.set({
-                name: name,
-                password: password,
-                picUrl: newPicUrl,
-                streak: { count: 0, lastDate: null }
-            });
-
-            currentUserId = newUserId;
-            currentUserName = name;
-            currentUserPic = newPicUrl;
-            localStorage.setItem("currentUserId", currentUserId);
-            localStorage.setItem("currentUserName", currentUserName);
-            localStorage.setItem("currentUserPic", currentUserPic);
-            closeLoginModal();
-            loadMovies();
-            showMainAppUI();
-            showToast(`Account created! Welcome, ${currentUserName}!`);
-        }
-    }
 
 
     // --- Event Listeners for new features ---
@@ -1956,14 +1873,7 @@
     });
 
     window.addEventListener("DOMContentLoaded", () => {
-        if (currentUserId) {
-            closeLoginModal();
-            loadMovies();
-            initializeFilterUI();
-            showMainAppUI();
-        } else {
-            showLoginModal();
-        }
+        // Auth state will be handled by auth.js
     });
   </script>
 </body>
