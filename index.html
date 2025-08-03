@@ -862,6 +862,19 @@
       border: 2px solid var(--border-color);
       display: none; /* Initially hidden */
     }
+
+    .button.loading .button__text {
+      visibility: hidden;
+      opacity: 0;
+    }
+
+    .button.loading .button__loading-spinner {
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
     
     @media (max-width: 768px) {
       .header-container {
@@ -1071,7 +1084,10 @@
                 </label>
                 <img id="profilePicPreview" src="" alt="Profile picture preview">
               </div>
-              <button onclick="handleLoginButtonClick()">Continue</button>
+              <button class="button" onclick="handleLoginButtonClick()">
+                <span class="button__text">Continue</span>
+                <i class="fas fa-spinner fa-spin button__loading-spinner" style="display: none;"></i>
+              </button>
           </div>
       </div>
   </div>
@@ -1898,71 +1914,95 @@
     }
 
     async function handleLoginButtonClick() {
+        const continueButton = document.querySelector('#loginModal .button');
+        continueButton.classList.add('loading');
+
         const name = document.getElementById('loginNameInput').value.trim();
         const password = document.getElementById('loginPasswordInput').value.trim();
         const profilePicFile = document.getElementById('profilePicInput').files[0];
 
+        console.log('handleLoginButtonClick started');
+
         if (!name || !password) {
             showToast("Please enter a name and password.");
+            continueButton.classList.remove('loading');
             return;
         }
 
-        const usersRef = db.ref('users');
-        const snapshot = await usersRef.orderByChild('name').equalTo(name).once('value');
+        try {
+            const usersRef = db.ref('users');
+            console.log('Searching for user...');
+            const snapshot = await usersRef.orderByChild('name').equalTo(name).once('value');
 
-        if (snapshot.exists()) {
-            const userData = snapshot.val();
-            const userKey = Object.keys(userData)[0];
-            const user = userData[userKey];
+            if (snapshot.exists()) {
+                console.log('User exists, attempting login...');
+                const userData = snapshot.val();
+                const userKey = Object.keys(userData)[0];
+                const user = userData[userKey];
 
-            if (user.password === password) {
-                currentUserId = userKey;
-                currentUserName = user.name;
-                currentUserPic = user.picUrl;
+                if (user.password === password) {
+                    console.log('Password correct, logging in.');
+                    currentUserId = userKey;
+                    currentUserName = user.name;
+                    currentUserPic = user.picUrl;
+                    localStorage.setItem("currentUserId", currentUserId);
+                    localStorage.setItem("currentUserName", currentUserName);
+                    localStorage.setItem("currentUserPic", currentUserPic);
+                    closeLoginModal();
+                    loadMovies();
+                    showMainAppUI();
+                    showToast(`Welcome back, ${currentUserName}!`);
+                } else {
+                    console.log('Incorrect password.');
+                    showToast("Incorrect password. Please try again.");
+                }
+            } else {
+                console.log('User does not exist, creating new account...');
+                const newUserRef = usersRef.push();
+                const newUserId = newUserRef.key;
+
+                let newPicUrl;
+                if (profilePicFile) {
+                    console.log('Profile picture selected, starting upload...');
+                    try {
+                        newPicUrl = await uploadProfilePicture(profilePicFile, newUserId);
+                        console.log('Profile picture uploaded successfully:', newPicUrl);
+                    } catch (error) {
+                        console.error("Error uploading profile picture:", error);
+                        showToast("Error uploading profile picture. Using default avatar.");
+                        newPicUrl = generateAvatarUrl(name);
+                    }
+                } else {
+                    console.log('No profile picture selected, generating avatar.');
+                    newPicUrl = generateAvatarUrl(name);
+                }
+
+                console.log('Creating user in database...');
+                await newUserRef.set({
+                    name: name,
+                    password: password,
+                    picUrl: newPicUrl,
+                    streak: { count: 0, lastDate: null }
+                });
+                console.log('User created in database.');
+
+                currentUserId = newUserId;
+                currentUserName = name;
+                currentUserPic = newPicUrl;
                 localStorage.setItem("currentUserId", currentUserId);
                 localStorage.setItem("currentUserName", currentUserName);
                 localStorage.setItem("currentUserPic", currentUserPic);
                 closeLoginModal();
                 loadMovies();
                 showMainAppUI();
-                showToast(`Welcome back, ${currentUserName}!`);
-            } else {
-                showToast("Incorrect password. Please try again.");
+                showToast(`Account created! Welcome, ${currentUserName}!`);
             }
-        } else {
-            const newUserRef = usersRef.push();
-            const newUserId = newUserRef.key;
-            
-            let newPicUrl;
-            if (profilePicFile) {
-                try {
-                    newPicUrl = await uploadProfilePicture(profilePicFile, newUserId);
-                } catch (error) {
-                    console.error("Error uploading profile picture:", error);
-                    showToast("Error uploading profile picture. Using default avatar.");
-                    newPicUrl = generateAvatarUrl(name);
-                }
-            } else {
-                newPicUrl = generateAvatarUrl(name);
-            }
-
-            await newUserRef.set({
-                name: name,
-                password: password,
-                picUrl: newPicUrl,
-                streak: { count: 0, lastDate: null }
-            });
-
-            currentUserId = newUserId;
-            currentUserName = name;
-            currentUserPic = newPicUrl;
-            localStorage.setItem("currentUserId", currentUserId);
-            localStorage.setItem("currentUserName", currentUserName);
-            localStorage.setItem("currentUserPic", currentUserPic);
-            closeLoginModal();
-            loadMovies();
-            showMainAppUI();
-            showToast(`Account created! Welcome, ${currentUserName}!`);
+        } catch (error) {
+            console.error("An error occurred during login/signup:", error);
+            showToast("An unexpected error occurred. Please try again.");
+        } finally {
+            continueButton.classList.remove('loading');
+            console.log('handleLoginButtonClick finished');
         }
     }
 
