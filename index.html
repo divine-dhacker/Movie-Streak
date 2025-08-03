@@ -826,6 +826,42 @@
         width: 100%;
         margin-bottom: 1rem;
     }
+
+    .profile-pic-upload {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .profile-pic-label {
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 50px;
+      background: var(--card-bg);
+      border: 1px dashed var(--border-color);
+      color: var(--secondary-text);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .profile-pic-label:hover {
+      background: #202740;
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+    }
+
+    #profilePicPreview {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border-color);
+      display: none; /* Initially hidden */
+    }
     
     @media (max-width: 768px) {
       .header-container {
@@ -1027,6 +1063,14 @@
           <div style="display: flex; flex-direction: column; gap: 1rem;">
               <input type="text" id="loginNameInput" placeholder="Enter a name" required>
               <input type="password" id="loginPasswordInput" placeholder="Enter a password" required>
+              <div class="profile-pic-upload">
+                <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+                <label for="profilePicInput" class="profile-pic-label">
+                  <i class="fas fa-camera"></i>
+                  <span>Add Photo</span>
+                </label>
+                <img id="profilePicPreview" src="" alt="Profile picture preview">
+              </div>
               <button onclick="handleLoginButtonClick()">Continue</button>
           </div>
       </div>
@@ -1051,6 +1095,7 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
 
     <script>
@@ -1067,6 +1112,7 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+    const storage = firebase.storage();
     
     // --- User ID and State Management ---
     let currentUserId = localStorage.getItem("currentUserId");
@@ -1844,9 +1890,17 @@
         location.reload();
     }
 
+    async function uploadProfilePicture(file, userId) {
+      const storageRef = storage.ref(`profile_pics/${userId}/${file.name}`);
+      const snapshot = await storageRef.put(file);
+      const downloadURL = await snapshot.ref.getDownloadURL();
+      return downloadURL;
+    }
+
     async function handleLoginButtonClick() {
         const name = document.getElementById('loginNameInput').value.trim();
         const password = document.getElementById('loginPasswordInput').value.trim();
+        const profilePicFile = document.getElementById('profilePicInput').files[0];
 
         if (!name || !password) {
             showToast("Please enter a name and password.");
@@ -1879,7 +1933,18 @@
             const newUserRef = usersRef.push();
             const newUserId = newUserRef.key;
             
-            const newPicUrl = generateAvatarUrl(name);
+            let newPicUrl;
+            if (profilePicFile) {
+                try {
+                    newPicUrl = await uploadProfilePicture(profilePicFile, newUserId);
+                } catch (error) {
+                    console.error("Error uploading profile picture:", error);
+                    showToast("Error uploading profile picture. Using default avatar.");
+                    newPicUrl = generateAvatarUrl(name);
+                }
+            } else {
+                newPicUrl = generateAvatarUrl(name);
+            }
 
             await newUserRef.set({
                 name: name,
@@ -1903,6 +1968,18 @@
 
 
     // --- Event Listeners for new features ---
+    document.getElementById('profilePicInput').addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById('profilePicPreview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
     document.getElementById('settingsToggle').addEventListener('click', (e) => {
         document.getElementById('settingsPanel').classList.toggle('open');
         e.stopPropagation();
