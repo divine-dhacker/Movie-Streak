@@ -1,0 +1,2349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Streak</title>
+  <link rel="icon" type="image/png" href="logos.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    :root {
+      --bg-color: #0b0f1a;
+      --card-bg: #1a2035;
+      --accent-color: #4a90e2;
+      --accent-hover: #5a9ff2;
+      --text-color: #e0e6f0;
+      --secondary-text: #a0a8b9;
+      --border-color: #3b425b;
+      --watched-color: #2ecc71;
+      --like-color: #e74c3c;
+      --highlight-color: #ffe066;
+      --warn-color: #f39c12;
+      --wanna-watch-color: #3498db;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      text-align: center;
+      padding-top: 2rem;
+      padding-bottom: 8rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background 1s ease;
+    }
+    
+    /* Streak Level 30+ background */
+    body.streak-level-30 {
+        background: linear-gradient(135deg, #0b0f1a, #0b0f1a, #1a2035);
+        background-size: 400% 400%;
+        animation: gradient-animation 15s ease infinite;
+    }
+
+    @keyframes gradient-animation {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .app-container {
+      max-width: 1200px;
+      width: 100%;
+      padding: 0 1rem;
+      position: relative;
+    }
+
+    .header-container {
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      margin: 0;
+      letter-spacing: 1px;
+    }
+
+    .input-section {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: var(--bg-color);
+      border-top: 1px solid var(--border-color);
+      padding: 1rem;
+      box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+    }
+    
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        width: 100%;
+        max-width: 700px;
+    }
+    
+    input[type="text"],
+     input[type="password"] {
+        flex-grow: 1;
+        padding: 0.9rem 1.25rem;
+        font-size: 1rem;
+        border: none;
+        border-radius: 50px;
+        background: var(--card-bg);
+        color: var(--text-color);
+        outline: none;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        padding-right: 3rem; /* Make space for the icon */
+    }
+
+    input[type="text"]:focus {
+        background: #202740;
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 2px var(--accent-color);
+    }
+    
+    .submit-btn-icon {
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--accent-color);
+        font-size: 1.5rem;
+        cursor: pointer;
+        transition: color 0.3s ease, transform 0.3s ease;
+    }
+    
+    .submit-btn-icon:hover {
+        color: var(--accent-hover);
+        transform: translateY(-50%) scale(1.1);
+    }
+    
+    .suggestions-list {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        width: 100%;
+        max-height: 250px;
+        overflow-y: auto;
+        background: var(--card-bg);
+        border-radius: 12px 12px 0 0;
+        box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.2);
+        z-index: 99;
+        text-align: left;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border-top: 1px solid var(--border-color);
+        display: none;
+    }
+    
+    .suggestions-list li {
+        padding: 0.75rem 1.25rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .suggestions-list li:hover {
+        background: rgba(74, 144, 226, 0.1);
+    }
+    .suggestions-list li:last-child {
+        border-bottom: none;
+    }
+    .suggestions-list img {
+        width: 40px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+    }
+    .suggestions-list span {
+        font-weight: 500;
+    }
+
+    button {
+      padding: 0.9rem 2rem;
+      font-size: 1rem;
+      background: var(--accent-color);
+      color: var(--bg-color);
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .settings-panel {
+      position: fixed;
+      top: 0;
+      right: -320px;
+      width: 300px;
+      height: 100%;
+      background: var(--card-bg);
+      box-shadow: -5px 0 20px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      padding: 2rem 1.5rem;
+      transition: right 0.4s ease-in-out;
+      overflow-y: auto;
+      text-align: left;
+    }
+    
+    .settings-panel.open {
+        right: 0;
+    }
+
+    .settings-toggle {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        font-size: 2rem;
+        color: var(--accent-color);
+        cursor: pointer;
+        z-index: 1001;
+        transition: transform 0.3s ease;
+    }
+    .settings-toggle:hover {
+        transform: rotate(90deg);
+    }
+    
+    .settings-panel h3 {
+        color: var(--accent-color);
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+        font-size: 1.25rem;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px dashed rgba(255,255,255,0.1);
+    }
+    
+    .filter-group label {
+        color: var(--secondary-text);
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    
+    .filter-section select,
+    .filter-section input[type="text"] {
+        padding: 0.75rem;
+        border-radius: 8px;
+        background: var(--bg-color);
+        color: var(--text-color);
+        border: 1px solid var(--border-color);
+        font-size: 1rem;
+        outline: none;
+    }
+    
+    .filter-section button {
+        padding: 0.75rem 1rem;
+        background: none;
+        border: 1px solid var(--border-color);
+        color: var(--secondary-text);
+        width: 100%;
+        margin-top: 0.5rem;
+        transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+    }
+    
+    .filter-section button:hover {
+        background: rgba(74, 144, 226, 0.1);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        transform: scale(1.01);
+    }
+
+    .filter-section button.active {
+        background: var(--accent-color);
+        color: var(--bg-color);
+        border-color: var(--accent-color);
+    }
+    
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .movie-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    
+    .movie-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+    
+    .movie-card.owner-card {
+      border: 2px solid var(--accent-color);
+    }
+    
+    .movie-card.watched-card {
+      border: 2px solid var(--watched-color);
+    }
+
+    .movie-card.wanna-watch-card {
+      border: 2px solid var(--wanna-watch-color);
+    }
+    
+    .movie-card-content {
+      padding: 1rem;
+      width: 100%;
+    }
+
+    .movie-card img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      border-radius: 8px 8px 0 0;
+      background-color: #333;
+      aspect-ratio: 2/3;
+      transition: transform 0.3s ease;
+    }
+
+    .movie-card:hover img {
+        transform: scale(1.05);
+    }
+
+    .movie-info {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      margin-top: 1rem;
+      text-align: left;
+    }
+    
+    .movie-title {
+      font-weight: 600;
+      color: var(--text-color);
+      font-size: 1.1rem;
+      line-height: 1.4;
+      flex-grow: 1;
+      width: 100%;
+      margin-bottom: 0.5rem;
+    }
+    
+    .movie-meta {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .movie-genre {
+      font-size: 0.8rem;
+      background: rgba(74, 144, 226, 0.2);
+      color: var(--accent-color);
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+    }
+    
+    .owner-profile {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--highlight-color);
+    }
+    
+    .owner-profile.streak-leader {
+        border-color: var(--warn-color);
+    }
+    
+    .like-section {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .like-icon, .watched-icon, .wanna-watch-icon {
+      cursor: pointer;
+      font-size: 1.25rem;
+      transition: color 0.2s ease, transform 0.2s ease;
+    }
+
+    .like-icon:hover, .watched-icon:hover, .wanna-watch-icon:hover {
+        transform: scale(1.15);
+    }
+    
+    .watched-icon {
+        color: var(--secondary-text);
+    }
+    .watched-icon.watched {
+        color: var(--watched-color);
+    }
+    
+    .wanna-watch-icon {
+        color: var(--secondary-text);
+    }
+    .wanna-watch-icon.wanna-watch {
+        color: var(--wanna-watch-color);
+    }
+
+    .like-icon.liked {
+      color: var(--like-color);
+    }
+    
+    .like-count {
+      color: var(--secondary-text);
+      font-size: 0.9rem;
+    }
+    
+    .card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .card-actions button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 50%;
+    }
+    
+    .movie-timestamp {
+        font-size: 0.7rem;
+        color: var(--secondary-text);
+        margin-top: 0.5rem;
+    }
+    
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+
+    .modal.visible {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--card-bg);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      position: relative;
+      transform: scale(0.9);
+      opacity: 0;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .modal.visible .modal-content {
+        transform: scale(1);
+        opacity: 1;
+    }
+    
+    .modal-close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--secondary-text);
+        transition: color 0.2s;
+    }
+    .modal-close-btn:hover {
+        color: var(--text-color);
+    }
+    
+    .modal-content h3 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      color: var(--accent-color);
+      font-size: 1.5rem;
+    }
+    
+    .modal-buttons {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+
+    .poster-edit-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .poster-preview {
+        max-width: 100%;
+        max-height: 200px;
+        object-fit: contain;
+        margin-top: 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+    }
+
+    .toast {
+      display: none;
+      position: fixed;
+      bottom: 7rem;
+      right: 1rem;
+      background: var(--highlight-color);
+      color: #000;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      z-index: 999;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      animation: toast-in 0.5s ease-out;
+    }
+
+    @keyframes toast-in {
+        from { transform: translateY(50px); opacity: 0; }
+        to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .toast.colorful {
+        color: white;
+        font-weight: bold;
+        background: linear-gradient(135deg, #f39c12, #e74c3c);
+    }
+    
+    .toast.streak-milestone {
+        color: black;
+        background: linear-gradient(135deg, #ffe066, #ffc107);
+    }
+    
+    .toast.streak-reset {
+        color: white;
+        background: linear-gradient(135deg, #e74c3c, #c0392b);
+        font-weight: bold;
+    }
+    
+    .discovery-game-btn, 
+    .discoveryReel {
+        position: fixed;
+        bottom: 12rem;
+        right: 1.5rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--highlight-color);
+        color: var(--bg-color);
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        z-index: 90;
+        cursor: pointer;
+        transition: transform 0.3s ease, background 0.3s ease;
+    }
+    .discovery-game-btn:hover {
+        transform: scale(1.1);
+        background: var(--warn-color);
+    }
+
+    .profile-icon {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--highlight-color);
+      cursor: pointer;
+      z-index: 90;
+      transition: transform 0.3s ease;
+      display: none;
+    }
+    .profile-icon:hover {
+        transform: scale(1.1);
+    }
+
+    .discovery-game-content {
+        max-width: 400px;
+    }
+    .discovery-game-content img {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 2/3;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+    .discovery-game-content .movie-title {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .discovery-game-content .game-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .discovery-game-content .game-buttons button {
+        width: 100%;
+        font-size: 1.1rem;
+        padding: 1rem;
+        border-radius: 12px;
+        color: var(--text-color);
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+    }
+    .discovery-game-content .game-buttons .watched-btn { background: var(--watched-color); color: var(--bg-color); }
+    .discovery-game-content .game-buttons .wanna-watch-btn { background: var(--wanna-watch-color); color: var(--bg-color); }
+    .discovery-game-content .game-buttons .not-interested-btn { background: #e74c3c; color: var(--bg-color); }
+    .discovery-game-content .game-buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    
+    .movie-of-the-day {
+        background: linear-gradient(135deg, #1c233d, #12172b);
+        border: 2px solid var(--highlight-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 2.5rem;
+        text-align: left;
+        display: none;
+        align-items: center;
+        gap: 2rem;
+    }
+    
+    .movie-of-the-day img {
+        width: 120px;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    .movie-of-the-day-info h3 {
+        font-size: 1.75rem;
+        color: var(--highlight-color);
+        margin: 0 0 0.25rem 0;
+    }
+    
+    .movie-of-the-day-info p {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+        margin: 0;
+    }
+    
+    .activity-feed {
+        margin-top: 2rem;
+        max-height: 300px;
+        overflow-y: auto;
+        padding-right: 1rem;
+    }
+    .activity-feed::-webkit-scrollbar {
+        width: 6px;
+    }
+    .activity-feed::-webkit-scrollbar-thumb {
+        background-color: var(--accent-color);
+        border-radius: 3px;
+    }
+    .activity-feed::-webkit-scrollbar-track {
+        background-color: transparent;
+    }
+    
+    .activity-feed h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+    }
+    
+    .activity-item {
+        font-size: 0.9rem;
+        color: var(--secondary-text);
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+    
+    .activity-item strong {
+        color: var(--text-color);
+    }
+    
+    .activity-item .time {
+        font-size: 0.75rem;
+        color: var(--secondary-text);
+        white-space: nowrap;
+    }
+
+    .activity-item .fa-user-circle {
+        color: var(--accent-color);
+        font-size: 1.25rem;
+    }
+
+    .movie-detail-modal-content {
+        max-width: 800px;
+        text-align: left;
+    }
+
+    .detail-header {
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+
+    .detail-poster {
+        width: 180px;
+        flex-shrink: 0;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+
+    .detail-info h3 {
+        font-size: 2rem;
+        margin: 0;
+        color: var(--accent-color);
+    }
+    .detail-info p {
+        color: var(--secondary-text);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    .detail-info .detail-genre {
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        background: rgba(74, 144, 226, 0.2);
+        color: var(--accent-color);
+        padding: 0.2rem 0.6rem;
+        border-radius: 20px;
+    }
+
+    .cast-section {
+        margin-top: 2rem;
+    }
+    .cast-section h4 {
+        margin-bottom: 1rem;
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+    .cast-list {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        padding-bottom: 1rem;
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+    }
+    .cast-list::-webkit-scrollbar {
+        display: none;
+    }
+    .cast-member {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        flex-shrink: 0;
+        width: 80px;
+    }
+    .cast-member img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+    .cast-member span {
+        font-size: 0.8rem;
+        color: var(--secondary-text);
+        line-height: 1.2;
+    }
+    
+    .profile-modal-content {
+        max-width: 400px;
+        padding: 3rem;
+    }
+    .profile-modal-content .profile-pic {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--highlight-color);
+        margin-bottom: 1rem;
+    }
+    .profile-modal-content h3 {
+        color: var(--text-color);
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+   .profile-modal-content .streak-display {
+        font-size: 1.5rem;
+        color: var(--highlight-color);
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+    }
+    
+    .profile-modal-content .streak-display i {
+        font-size: 1.75rem;
+        color: #f39c12; /* Default fire color */
+        transition: all 0.3s ease;
+    }
+
+    /* Streak Levels */
+    .profile-modal-content .streak-display i.streak-level-7 {
+        animation: fire-glow 2s infinite ease-in-out;
+    }
+    @keyframes fire-glow {
+        0%, 100% { color: #f39c12; text-shadow: 0 0 5px #f39c12, 0 0 10px #f39c12; }
+        50% { color: #e74c3c; text-shadow: 0 0 10px #e74c3c, 0 0 20px #e74c3c; }
+    }
+
+    .profile-modal-content .streak-display i.streak-level-15 {
+        animation: fire-pulse 1.5s infinite ease-in-out;
+    }
+    @keyframes fire-pulse {
+        0%, 100% { transform: scale(1); text-shadow: 0 0 5px #e74c3c, 0 0 10px #e74c3c; }
+        50% { transform: scale(1.2); text-shadow: 0 0 15px #e74c3c, 0 0 30px #e74c3c; }
+    }
+
+    .profile-modal-content .streak-display i.streak-level-30 {
+        background: linear-gradient(45deg, #f39c12, #e74c3c, #ffe066, #ffc107);
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: streak-fire-anim 2s infinite;
+    }
+    @keyframes streak-fire-anim {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+    
+    .profile-modal-content .streak-display span {
+        font-weight: bold;
+    }
+    
+    .profile-modal-content .discovery-boost-btn {
+        background: var(--warn-color);
+        color: var(--bg-color);
+    }
+    .profile-modal-content .discovery-boost-btn:hover {
+        background: #e67e22;
+    }
+
+    .profile-modal-content button {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+    
+    .profile-modal-content .milestones {
+        margin-top: 1.5rem;
+        text-align: left;
+    }
+    .profile-modal-content .milestones h4 {
+        color: var(--text-color);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .profile-modal-content .milestones-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .milestone-badge {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.8rem;
+        color: var(--secondary-text);
+        width: 80px;
+        text-align: center;
+    }
+    .milestone-badge .badge-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: var(--bg-color);
+        border: 2px solid var(--border-color);
+        margin-bottom: 0.5rem;
+    }
+    .milestone-badge.unlocked .badge-icon {
+        border-color: var(--highlight-color);
+        color: var(--highlight-color);
+    }
+    
+    .login-content {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+    .profile-pic-upload {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    .profile-pic-preview {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--accent-color);
+        display: block;
+        margin: 0 auto 0.5rem;
+    }
+    .upload-btn {
+        display: inline-block;
+        background: var(--card-bg);
+        color: var(--secondary-text);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        border: 1px solid var(--border-color);
+        font-weight: 600;
+    }
+    .upload-btn i {
+        margin-right: 0.5rem;
+    }
+    .upload-btn:hover {
+        background: #202740;
+    }
+    #profilePicFile {
+        display: none;
+    }
+
+    .password-wrapper {
+        position: relative;
+    }
+    .password-toggle {
+        position: absolute;
+        right: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--secondary-text);
+        cursor: pointer;
+    }
+    
+    @media (max-width: 768px) {
+      .header-container {
+        justify-content: center;
+      }
+      .settings-toggle {
+        top: 20px;
+        right: 20px;
+      }
+      .settings-panel {
+        width: 280px;
+        right: -280px;
+      }
+      .input-wrapper {
+        flex-direction: row;
+        gap: 0;
+      }
+      .input-wrapper button {
+        width: auto;
+      }
+      .movie-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      }
+      .movie-of-the-day {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+          gap: 1.5rem;
+      }
+      .detail-header {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+      }
+      .detail-info {
+        margin-top: 1rem;
+      }
+      .discovery-game-btn {
+          bottom: 12rem;
+          right: 0.75rem;
+          width: 50px;
+          height: 50px;
+      }
+      .discoveryReel {
+          bottom: 8rem;
+          right: 0.75rem;
+          width: 50px;
+          height: 50px;
+      }
+      .profile-icon {
+          top: 15px;
+          left: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+    
+  <div class="app-container">
+    <header class="header-container">
+      <h1>Movie Streak</h1>
+      <i id="settingsToggle" class="fas fa-cog settings-toggle"></i>
+    </header>
+    
+    <div id="movieOfTheDay" class="movie-of-the-day">
+      <img id="motdPoster" src="" alt="Movie of the Day Poster">
+      <div class="movie-of-the-day-info">
+        <h3 id="motdTitle"></h3>
+        <p id="motdSubtitle">Featured daily to help you discover new films!</p>
+        <button id="addMotdBtn" onclick="addMovieOfTheDay()">Add to My List</button>
+      </div>
+    </div>
+    
+    <ul id="movieList" class="movie-grid"></ul>
+  </div>
+
+  <div class="input-section">
+      <div class="input-wrapper">
+        <input type="text" id="movieName" placeholder="Search for a movie...">
+        <i class="fas fa-plus-circle submit-btn-icon" onclick="submitMovie()"></i>
+        <ul id="suggestionsList" class="suggestions-list"></ul>
+      </div>
+  </div>
+
+  <img id="profileIcon" class="profile-icon" src="" alt="Profile Icon" style="display: none;">
+  <i id="discoveryGameBtn" class="fas fa-tv discovery-game-btn" onclick="startDiscoveryGame()"></i>
+  <a href="reels.html"><i id="discoveryReel" class="fas fa-play discoveryReel"></i></a>
+  
+  <div id="settingsPanel" class="settings-panel">
+    <h3>Settings & Filters</h3>
+    <div class="filter-group">
+      <label for="searchBox">Search Movies</label>
+      <input type="text" id="searchBox" placeholder="Search by title...">
+    </div>
+    
+    <div class="filter-group">
+      <label for="genreFilter">Filter by Genre</label>
+      <select id="genreFilter"></select>
+    </div>
+    
+    <div class="filter-group">
+      <label for="sortOptions">Sort By</label>
+      <select id="sortOptions">
+          <option value="likes">Most Liked</option>
+          <option value="title">A-Z Title</option>
+          <option value="date">Date Added</option>
+      </select>
+    </div>
+    
+    <div class="filter-group">
+      <label>Display Options</label>
+      <button id="myMoviesButton">My Movies</button>
+      <button id="watchedMoviesButton">Show Watched</button>
+      <button id="wannaWatchMoviesButton">Wanna Watch</button>
+    </div>
+    
+    <div class="activity-feed">
+      <h3>Recent Activity</h3>
+      <div id="activityList"></div>
+    </div>
+  </div>
+
+  <div id="editNameModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close-btn" onclick="closeModal('editNameModal')"></i>
+      <h3>Edit Movie Name</h3>
+      <input type="text" id="editNameInput">
+      <div class="modal-buttons">
+        <button onclick="confirmNameEdit()">Save</button>
+        <button onclick="closeModal('editNameModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="editPosterModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close-btn" onclick="closeModal('editPosterModal')"></i>
+      <h3>Edit Poster</h3>
+      <div class="poster-edit-options">
+          <input type="text" id="editPosterUrlInput" placeholder="Paste image URL here">
+          <label>or</label>
+          <input type="file" id="editPosterFileInput" accept="image/*" onchange="previewPoster(event)">
+          <img id="posterPreview" class="poster-preview" src="">
+      </div>
+      <div class="modal-buttons">
+        <button onclick="confirmPosterEdit()">Save</button>
+        <button onclick="closeModal('editPosterModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <i class="fas fa-times modal-close-btn" onclick="closeModal('confirmModal')"></i>
+        <h3>Delete Movie?</h3>
+        <p>Are you sure you want to delete this movie?</p>
+        <div class="modal-buttons">
+            <button id="confirmDeleteButton" onclick="">Yes, Delete</button>
+            <button onclick="closeModal('confirmModal')">Cancel</button>
+        </div>
+    </div>
+  </div>
+
+  <div id="movieDetailsModal" class="modal">
+    <div class="modal-content movie-detail-modal-content">
+      <i class="fas fa-times modal-close-btn" onclick="closeModal('movieDetailsModal')"></i>
+      <div class="detail-header">
+        <img id="detailPoster" class="detail-poster" src="" alt="Movie Poster">
+        <div class="detail-info">
+          <h3 id="detailTitle"></h3>
+          <p id="detailDescription"></p>
+          <span id="detailGenre" class="detail-genre"></span>
+        </div>
+      </div>
+      <div id="castSection" class="cast-section" style="display: none;">
+        <h4>Cast</h4>
+        <div id="castList" class="cast-list"></div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="discoveryGameModal" class="modal">
+    <div class="modal-content discovery-game-content">
+      <i class="fas fa-times modal-close-btn" onclick="closeDiscoveryGame()"></i>
+      <img id="gameMoviePoster" src="https://images.unsplash.com/photo-1596727147705-61849a613f17?q=80&w=1780" alt="Random movie poster">
+      <span id="gameMovieTitle" class="movie-title">Finding Movies...</span>
+      <div class="game-buttons">
+          <button class="watched-btn" onclick="handleGameAction('watched')"><i class="fas fa-check-circle"></i> Watched</button>
+          <button class="wanna-watch-btn" onclick="handleGameAction('wanna-watch')"><i class="fas fa-bookmark"></i> Wanna Watch</button>
+          <button class="not-interested-btn" onclick="handleGameAction('not-interested')"><i class="fas fa-times-circle"></i> Not Interested</button>
+      </div>
+    </div>
+  </div>
+  
+  <div id="loginModal" class="modal visible">
+      <div class="modal-content">
+          <h3>Welcome to Movie Streak!</h3>
+          <p>Enter a name and password to get started. If the name exists, you'll be logged in.</p>
+          <div class="login-content">
+              <div class="profile-pic-upload">
+                  <img id="profilePicPreview" class="profile-pic-preview" src="https://ui-avatars.com/api/?name=User&background=4a90e2&color=fff&size=128&bold=true&font-size=0.5" alt="Profile Picture">
+                  <label for="profilePicFile" class="upload-btn">
+                      <i class="fas fa-camera"></i> Upload Profile Pic
+                  </label>
+                  <input type="file" id="profilePicFile" accept="image/*" onchange="previewProfilePic(event)">
+              </div>
+              <input type="text" id="loginNameInput" placeholder="Enter a name" required>
+              <div class="password-wrapper">
+                  <input type="password" id="loginPasswordInput" placeholder="Enter a password" required>
+                  <i id="passwordToggle" class="fas fa-eye password-toggle"></i>
+              </div>
+              <button onclick="handleLoginButtonClick()">Continue</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="profileModal" class="modal">
+      <div class="modal-content profile-modal-content">
+          <i class="fas fa-times modal-close-btn" onclick="closeModal('profileModal')"></i>
+          <img id="profilePicModal" class="profile-pic" src="">
+          <h3 id="profileNameModal"></h3>
+          <p class="streak-display"><i id="streakFireIcon" class="fas fa-fire"></i> Streak: <span id="streakCountModal">0</span> days</p>
+          
+          <button class="wanna-watch-btn" onclick="closeModal('profileModal'); startDiscoveryGame();">Start Discovery Game</button>
+          <button id="discoveryBoostBtn" class="discovery-boost-btn" style="display: none;" onclick="startDiscoveryGame(5)">Discovery Boost</button>
+
+          <div class="milestones">
+            <h4>Milestones</h4>
+            <div id="milestonesGrid" class="milestones-grid">
+                <div id="badge-7" class="milestone-badge">
+                    <div class="badge-icon"><i class="fas fa-star"></i></div>
+                    <span>7-Day Streak</span>
+                </div>
+                <div id="badge-30" class="milestone-badge">
+                    <div class="badge-icon"><i class="fas fa-medal"></i></div>
+                    <span>30-Day Streak</span>
+                </div>
+                <div id="badge-100" class="milestone-badge">
+                    <div class="badge-icon"><i class="fas fa-crown"></i></div>
+                    <span>100-Day Streak</span>
+                </div>
+            </div>
+          </div>
+          
+          <button onclick="logout()">Log Out</button>
+      </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <div class="share-popup">
+    <button id="share-button">Share App</button>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-messaging-compat.js"></script>
+
+    <script>
+    // --- Firebase Configuration and Initialization ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAd_eJ8Y-rmBLa9dAEXLgT4oaK_PX3pMM",
+      authDomain: "moviespark-9663d.firebaseapp.com",
+      databaseURL: "https://moviespark-9663d-default-rtdb.europe-west1.firebasedatabase.app/",
+      projectId: "moviespark-9663d",
+      storageBucket: "moviespark-9663d.firebasestorage.app",
+      messagingSenderId: "827433785766",
+      appId: "1:827433785766:web:9b5cb5336011330b3dd767"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    
+    // --- User ID and State Management ---
+    let currentUserId = localStorage.getItem("currentUserId");
+    let currentUserName = localStorage.getItem("currentUserName");
+    let currentUserPic = localStorage.getItem("currentUserPic");
+
+    let allMovies = [];
+    let movieUsers = {};
+    let currentStreakCount = 0;
+    
+    let currentFilter = JSON.parse(localStorage.getItem('movieFilters')) || {
+        genre: 'all',
+        sort: 'likes',
+        myMovies: false,
+        watchedMovies: false,
+        wannaWatchMovies: false,
+        search: ''
+    };
+    
+    let movieDiscoveryPool = [];
+    let currentDiscoveryMovieKey = null;
+    let tmdbSearchResults = [];
+
+    function saveFilters() {
+        localStorage.setItem('movieFilters', JSON.stringify(currentFilter));
+    }
+
+    // --- Core Functions ---
+    const tmdbApiKey = '05d7badb06e5f091941f127ce4bc8947';
+    const tmdbBaseUrl = 'https://api.themoviedb.org/3';
+    const tmdbImageBaseUrl = 'https://image.tmdb.org/t/p/w500';
+    const tmdbActorImageBaseUrl = 'https://image.tmdb.org/t/p/w185';
+    
+    const tmdbGenres = {
+      "Action": 28, "Adventure": 12, "Animation": 16, "Comedy": 35, "Crime": 80,
+      "Documentary": 99, "Drama": 18, "Family": 10751, "Fantasy": 14, "History": 36,
+      "Horror": 27, "Music": 10402, "Mystery": 9648, "Romance": 10749,
+      "Science Fiction": 878, "TV Movie": 10770, "Thriller": 53, "War": 10752, "Western": 37
+    };
+    
+    const movieNameInput = document.getElementById('movieName');
+    const suggestionsList = document.getElementById('suggestionsList');
+    let searchTimeout;
+
+    movieNameInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        const query = movieNameInput.value.trim();
+        if (query.length < 2) {
+            suggestionsList.style.display = 'none';
+            return;
+        }
+        searchTimeout = setTimeout(() => {
+            searchMoviesTMDb(query);
+        }, 500);
+    });
+
+    async function searchMoviesTMDb(query) {
+        const url = `${tmdbBaseUrl}/search/movie?api_key=${tmdbApiKey}&query=${encodeURIComponent(query)}`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            tmdbSearchResults = data.results || [];
+            displaySuggestions(tmdbSearchResults, query);
+        } catch (error) {
+            console.error("Error searching TMDb:", error);
+        }
+    }
+    
+    function displaySuggestions(results, query) {
+        suggestionsList.innerHTML = '';
+        const lowerCaseQuery = query.toLowerCase();
+
+        if (results.length > 0) {
+            results.sort((a, b) => {
+                const aMatchesTitle = a.title.toLowerCase() === lowerCaseQuery;
+                const bMatchesTitle = b.title.toLowerCase() === lowerCaseQuery;
+                if (aMatchesTitle && !bMatchesTitle) return -1;
+                if (!aMatchesTitle && bMatchesTitle) return 1;
+                return 0;
+            });
+
+            results.slice(0, 5).forEach(movie => {
+                const li = document.createElement('li');
+                li.onclick = () => selectSuggestion(movie);
+                const posterUrl = movie.poster_path ? `${tmdbImageBaseUrl}${movie.poster_path}` : 'https://images.unsplash.com/photo-1596727147705-61849a613f17?q=80&w=1780';
+                const releaseYear = movie.release_date ? movie.release_date.substring(0, 4) : 'N/A';
+
+                let matchType = 'Other';
+                if (movie.title.toLowerCase().includes(lowerCaseQuery)) {
+                    matchType = 'Title Match';
+                } else if (movie.overview && movie.overview.toLowerCase().includes(lowerCaseQuery)) {
+                    matchType = 'Plot Match';
+                }
+
+                li.innerHTML = `
+                    <img src="${posterUrl}" alt="${movie.title} Poster">
+                    <div style="display:flex; flex-direction: column; text-align:left;">
+                        <span>${movie.title} (${releaseYear})</span>
+                        <small style="color: var(--secondary-text);">Matched on: ${matchType}</small>
+                    </div>
+                `;
+                suggestionsList.appendChild(li);
+            });
+            suggestionsList.style.display = 'block';
+        } else {
+            suggestionsList.style.display = 'none';
+        }
+    }
+
+    async function selectSuggestion(movie) {
+      const existingMovie = allMovies.find(m => m.name === movie.title);
+      if (existingMovie) {
+          showToast(`"${movie.title}" already exists!`);
+          movieNameInput.value = '';
+          suggestionsList.style.display = 'none';
+          return;
+      }
+      
+      const movieDetails = await fetchMovieDetailsFromTMDb(movie.id);
+      
+      db.ref('movies').push({
+          name: movie.title,
+          poster: movieDetails.poster,
+          genre: movieDetails.genre,
+          plot: movieDetails.plot,
+          actors: movieDetails.actors,
+          owner: currentUserId,
+          ownerName: currentUserName,
+          ownerPic: currentUserPic,
+          likes: {},
+          watchedBy: {},
+          wannaWatchBy: {},
+          lastUpdated: Date.now()
+      }).then(() => {
+          showToast(`"${movie.title}" added!`);
+          addActivity(`added movie <strong>${movie.title}</strong>`);
+          movieNameInput.value = '';
+          suggestionsList.style.display = 'none';
+          updateStreak(true);
+      }).catch(error => {
+          console.error("Error adding movie:", error);
+          showToast("Error adding movie.");
+      });
+    }
+
+    function submitMovie() {
+        const movieName = movieNameInput.value.trim();
+        if (movieName) {
+            const selectedMovie = tmdbSearchResults.find(m => m.title === movieName);
+            if (selectedMovie) {
+                selectSuggestion(selectedMovie);
+            } else {
+                searchMoviesTMDb(movieName).then(results => {
+                    if (tmdbSearchResults.length > 0) {
+                        selectSuggestion(tmdbSearchResults[0]);
+                    } else {
+                        showToast("No movie found with that name.");
+                    }
+                });
+            }
+        }
+    }
+
+    async function fetchActorProfile(actorName) {
+        const searchUrl = `${tmdbBaseUrl}/search/person?api_key=${tmdbApiKey}&query=${encodeURIComponent(actorName)}`;
+        try {
+            const searchResponse = await fetch(searchUrl);
+            const searchData = await searchResponse.json();
+            if (searchData.results && searchData.results.length > 0) {
+                const profilePath = searchData.results[0].profile_path;
+                return profilePath ? `${tmdbActorImageBaseUrl}${profilePath}` : 'https://i.imgur.com/2V1lQ3h.png';
+            }
+        } catch (error) {
+            console.error("Error fetching actor profile:", error);
+        }
+        return 'https://i.imgur.com/2V1lQ3h.png';
+    }
+
+    function loadMovies() {
+      const moviesRef = db.ref('movies');
+      const usersRef = db.ref('users');
+
+      usersRef.on('value', userSnapshot => {
+        movieUsers = userSnapshot.val() || {};
+        const allUserIds = Object.keys(movieUsers);
+        let maxStreak = 0;
+        let streakLeaderId = null;
+
+        allUserIds.forEach(userId => {
+            const streak = movieUsers[userId].streak?.count || 0;
+            if (streak > maxStreak) {
+                maxStreak = streak;
+                streakLeaderId = userId;
+            }
+        });
+        movieUsers.streakLeaderId = streakLeaderId;
+        
+        // Once users are loaded, update streak icon and check background
+        updateStreakDisplay(currentStreakCount);
+        checkExclusiveBackground(currentStreakCount);
+        
+        moviesRef.on('value', movieSnapshot => {
+          allMovies = [];
+          const genres = new Set();
+          genres.add('All');
+
+          movieSnapshot.forEach(child => {
+            const movie = { key: child.key, ...child.val() };
+            allMovies.push(movie);
+            if (movie.genre) {
+                movie.genre.split(', ').forEach(g => genres.add(g.trim()));
+            }
+          });
+          
+          updateGenreFilter(Array.from(genres).sort());
+          renderMovies();
+          displayMovieOfTheDay();
+          updateStreak();
+        });
+      });
+    }
+    
+    function updateGenreFilter(genres) {
+        const genreSelect = document.getElementById('genreFilter');
+        genreSelect.innerHTML = '';
+        genres.forEach(genre => {
+            const option = document.createElement('option');
+            option.value = genre.toLowerCase();
+            option.textContent = genre;
+            genreSelect.appendChild(option);
+        });
+        genreSelect.value = currentFilter.genre;
+    }
+    
+    function renderMovies() {
+        const movieList = document.getElementById('movieList');
+        movieList.innerHTML = '';
+        
+        let filteredMovies = [...allMovies];
+        
+        if (currentFilter.genre !== 'all') {
+            filteredMovies = filteredMovies.filter(movie => movie.genre && movie.genre.toLowerCase().includes(currentFilter.genre));
+        }
+        
+        if (currentFilter.myMovies) {
+            filteredMovies = filteredMovies.filter(movie => movie.owner === currentUserId);
+        }
+        
+        if (currentFilter.watchedMovies) {
+            filteredMovies = filteredMovies.filter(movie => movie.watchedBy && movie.watchedBy[currentUserId]);
+        }
+        
+        if (currentFilter.wannaWatchMovies) {
+            filteredMovies = filteredMovies.filter(movie => movie.wannaWatchBy && movie.wannaWatchBy[currentUserId]);
+        }
+        
+        if (currentFilter.search) {
+            const searchTerm = currentFilter.search.toLowerCase();
+            filteredMovies = filteredMovies.filter(movie => movie.name.toLowerCase().includes(searchTerm));
+        }
+        
+        if (currentFilter.sort === 'likes') {
+            filteredMovies.sort((a, b) => (Object.keys(b.likes || {}).length) - (Object.keys(a.likes || {}).length));
+        } else if (currentFilter.sort === 'title') {
+            filteredMovies.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (currentFilter.sort === 'date') {
+            filteredMovies.sort((a, b) => b.lastUpdated - a.lastUpdated);
+        }
+
+        filteredMovies.forEach(movie => {
+          const isOwner = movie.owner === currentUserId;
+          const likeCount = Object.keys(movie.likes || {}).length;
+          const isLiked = movie.likes && movie.likes[currentUserId];
+          const isWatched = movie.watchedBy && movie.watchedBy[currentUserId];
+          const isWannaWatch = movie.wannaWatchBy && movie.wannaWatchBy[currentUserId];
+
+          const cardClasses = [
+              'movie-card',
+              isOwner ? 'owner-card' : '',
+              isWatched ? 'watched-card' : '',
+              isWannaWatch && !isWatched ? 'wanna-watch-card' : ''
+          ].filter(Boolean).join(' ');
+
+          const ownerName = movieUsers[movie.owner]?.name || 'Guest';
+          const ownerPic = movieUsers[movie.owner]?.picUrl || 'https://i.imgur.com/your-default-pic.png';
+          
+          const isStreakLeader = movieUsers.streakLeaderId === movie.owner;
+          const ownerProfileClasses = `owner-profile ${isStreakLeader ? 'streak-leader' : ''}`;
+
+          const li = document.createElement('li');
+          li.className = cardClasses;
+          li.innerHTML = `
+            <img src="${movie.poster}" alt="${movie.name} poster" loading="lazy">
+            <div class="movie-card-content">
+              <span class="movie-title">${movie.name}</span>
+              <div class="movie-meta">
+                  <span class="movie-genre">${movie.genre || 'Unknown'}</span>
+                  <div class="like-section">
+                      <i 
+                        class="fas like-icon ${isLiked ? 'fa-heart liked' : 'fa-heart'}"
+                        onclick="event.stopPropagation(); toggleLike('${movie.key}')"
+                      ></i>
+                      <span class="like-count">${likeCount}</span>
+                      <i 
+                        class="fas watched-icon ${isWatched ? 'fa-check-circle watched' : 'fa-circle'}"
+                        onclick="event.stopPropagation(); toggleWatched('${movie.key}')"
+                      ></i>
+                      <i 
+                        class="fas wanna-watch-icon ${isWannaWatch && !isWatched ? 'fa-bookmark wanna-watch' : 'fa-bookmark'}"
+                        onclick="event.stopPropagation(); toggleWannaWatch('${movie.key}')"
+                      ></i>
+                  </div>
+              </div>
+              <span class="movie-timestamp">Added by: ${ownerName}</span>
+              <div class="card-actions">
+                ${isOwner ? `
+                    <button onclick="event.stopPropagation(); editMovieName('${movie.key}', '${movie.name}')" title="Edit Name"><i class="fas fa-edit"></i></button>
+                    <button onclick="event.stopPropagation(); editMoviePoster('${movie.key}')" title="Edit Poster"><i class="fas fa-image"></i></button>
+                    <button onclick="event.stopPropagation(); showDeleteConfirm('${movie.key}')" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                ` : `<img class="${ownerProfileClasses}" src="${ownerPic}" alt="${ownerName}'s pic">`}
+              </div>
+            </div>
+          `;
+          li.onclick = () => showMovieDetails(movie.key);
+          movieList.appendChild(li);
+        });
+    }
+    
+    function toggleLike(movieKey) {
+      const movieRef = db.ref('movies/' + movieKey + '/likes');
+      movieRef.once('value', snapshot => {
+        const likes = snapshot.val() || {};
+        const isLiked = !!likes[currentUserId];
+        const movieName = allMovies.find(m => m.key === movieKey)?.name || 'a movie';
+        
+        if (isLiked) {
+          delete likes[currentUserId];
+          showToast("Like removed.");
+        } else {
+          likes[currentUserId] = true;
+          showToast("You liked this movie! ❤️");
+          addActivity(`liked movie <strong>${movieName}</strong>`);
+          updateStreak(true);
+        }
+        
+        db.ref('movies/' + movieKey).update({ likes: likes, lastUpdated: Date.now() });
+      });
+    }
+    
+    function toggleWatched(movieKey) {
+        const movieRef = db.ref('movies/' + movieKey);
+        movieRef.once('value', snapshot => {
+            const movie = snapshot.val() || {};
+            const watchedBy = movie.watchedBy || {};
+            const isWatched = !!watchedBy[currentUserId];
+            const movieName = movie.name || 'a movie';
+            
+            if (isWatched) {
+                delete watchedBy[currentUserId];
+                showToast("Movie unmarked as watched.");
+            } else {
+                watchedBy[currentUserId] = true;
+                showToast("Movie marked as watched. ✅");
+                addActivity(`marked <strong>${movieName}</strong> as watched`);
+                updateStreak(true);
+            }
+            
+            movieRef.update({ watchedBy: watchedBy, lastUpdated: Date.now() });
+        });
+    }
+
+    function toggleWannaWatch(movieKey) {
+      const movieRef = db.ref('movies/' + movieKey);
+      movieRef.once('value', snapshot => {
+          const movie = snapshot.val() || {};
+          const wannaWatchBy = movie.wannaWatchBy || {};
+          const isWannaWatch = !!wannaWatchBy[currentUserId];
+          const movieName = movie.name || 'a movie';
+
+          if (isWannaWatch) {
+              delete wannaWatchBy[currentUserId];
+              showToast("Movie removed from Wanna Watch list.");
+          } else {
+              wannaWatchBy[currentUserId] = true;
+              showToast("Movie added to Wanna Watch list! 👀");
+              addActivity(`added <strong>${movieName}</strong> to Wanna Watch`);
+              updateStreak(true);
+          }
+          
+          movieRef.update({ wannaWatchBy: wannaWatchBy, lastUpdated: Date.now() });
+      });
+    }
+    
+    function showDeleteConfirm(movieKey) {
+        document.getElementById('confirmModal').classList.add('visible');
+        document.getElementById('confirmDeleteButton').onclick = () => {
+            deleteMovie(movieKey);
+            closeModal('confirmModal');
+        };
+    }
+    
+    function deleteMovie(movieKey) {
+      db.ref('movies/' + movieKey).remove()
+        .then(() => showToast("Movie deleted."))
+        .catch(error => {
+          console.error("Error deleting movie:", error);
+          showToast("Error deleting movie.");
+        });
+    }
+    
+    let currentEditKey = null;
+    function editMovieName(movieKey, oldName) {
+      currentEditKey = movieKey;
+      document.getElementById('editNameInput').value = oldName;
+      document.getElementById('editNameModal').classList.add('visible');
+    }
+    
+    function confirmNameEdit() {
+      const newName = document.getElementById('editNameInput').value.trim();
+      if (newName && currentEditKey) {
+        db.ref('movies/' + currentEditKey).update({ name: newName, lastUpdated: Date.now() })
+          .then(() => {
+            closeModal('editNameModal');
+            showToast("Movie name updated.");
+          })
+          .catch(error => {
+            console.error("Error updating movie:", error);
+            showToast("Error updating movie.");
+          });
+      }
+    }
+
+    function editMoviePoster(movieKey) {
+      currentEditKey = movieKey;
+      const movie = allMovies.find(m => m.key === movieKey);
+      if (movie) {
+        document.getElementById('editPosterUrlInput').value = movie.poster;
+        document.getElementById('posterPreview').src = movie.poster;
+        document.getElementById('editPosterFileInput').value = '';
+        document.getElementById('editPosterModal').classList.add('visible');
+      }
+    }
+    
+    function previewPoster(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('posterPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+    
+    function confirmPosterEdit() {
+        let newPosterUrl = document.getElementById('editPosterUrlInput').value.trim();
+        const fileInput = document.getElementById('editPosterFileInput');
+        
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const base64Url = e.target.result;
+                saveNewPoster(base64Url);
+            };
+            reader.readAsDataURL(file);
+        } else if (newPosterUrl) {
+            saveNewPoster(newPosterUrl);
+        } else {
+            showToast("Please provide a URL or select a file.");
+        }
+    }
+    
+    function saveNewPoster(newPosterUrl) {
+        if (currentEditKey) {
+            db.ref('movies/' + currentEditKey).update({ poster: newPosterUrl, lastUpdated: Date.now() })
+                .then(() => {
+                    closeModal('editPosterModal');
+                    showToast("Movie poster updated.");
+                })
+                .catch(error => {
+                    console.error("Error updating poster:", error);
+                    showToast("Error updating poster.");
+                });
+        }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('visible');
+      currentEditKey = null;
+    }
+    
+    function showToast(message, type = 'normal') {
+      const toast = document.getElementById("toast");
+      toast.innerHTML = message;
+      toast.className = 'toast';
+      if (type === 'streak-continue') toast.classList.add('colorful');
+      if (type === 'streak-reset') toast.classList.add('streak-reset');
+      if (type === 'milestone') toast.classList.add('streak-milestone');
+      
+      toast.style.display = "block";
+      toast.style.opacity = 1;
+
+      setTimeout(() => {
+        toast.style.opacity = 0;
+      }, 3000);
+
+      setTimeout(() => {
+        toast.style.display = "none";
+      }, 3500);
+    }
+    
+    function timeSince(date) {
+        if (!date) return 'just now';
+        const seconds = Math.floor((Date.now() - date) / 1000);
+        let interval = seconds / 31536000;
+        if (interval > 1) return Math.floor(interval) + " years";
+        interval = seconds / 2592000;
+        if (interval > 1) return Math.floor(interval) + " months";
+        interval = seconds / 86400;
+        if (interval > 1) return Math.floor(interval) + " days";
+        interval = seconds / 3600;
+        if (interval > 1) return Math.floor(interval) + " hours";
+        interval = seconds / 60;
+        if (interval > 1) return Math.floor(interval) + " minutes";
+        return Math.floor(seconds) + " seconds";
+    }
+
+// --- New Feature Functions ---
+    let movieOfTheDay = null;
+    function displayMovieOfTheDay() {
+        if (allMovies.length === 0) {
+            document.getElementById('movieOfTheDay').style.display = 'none';
+            return;
+        }
+        
+        let moviesToPickFrom = [...allMovies];
+        const isHighStreak = currentStreakCount >= 15;
+        const myWannaWatchList = moviesToPickFrom.filter(m => m.wannaWatchBy && m.wannaWatchBy[currentUserId]);
+
+        if (isHighStreak && myWannaWatchList.length > 0) {
+            movieOfTheDay = myWannaWatchList[Math.floor(Math.random() * myWannaWatchList.length)];
+            document.getElementById('motdTitle').textContent = movieOfTheDay.name;
+            document.getElementById('motdSubtitle').textContent = "Your 'Highlight of the Day'!";
+            document.getElementById('motdPoster').src = movieOfTheDay.poster;
+            document.getElementById('addMotdBtn').style.display = 'none';
+        } else {
+            const today = new Date().toDateString();
+            const storedMotd = JSON.parse(localStorage.getItem('movieOfTheDay'));
+
+            if (storedMotd && storedMotd.date === today) {
+                movieOfTheDay = allMovies.find(m => m.key === storedMotd.movieKey);
+            } else {
+                movieOfTheDay = allMovies[Math.floor(Math.random() * allMovies.length)];
+                localStorage.setItem('movieOfTheDay', JSON.stringify({ date: today, movieKey: movieOfTheDay.key }));
+            }
+            document.getElementById('motdTitle').textContent = movieOfTheDay.name;
+            document.getElementById('motdSubtitle').textContent = "Featured daily to help you discover new films!";
+            document.getElementById('motdPoster').src = movieOfTheDay.poster;
+            document.getElementById('addMotdBtn').style.display = 'block';
+        }
+        
+        if (movieOfTheDay) {
+            document.getElementById('movieOfTheDay').style.display = 'flex';
+        }
+    }
+    
+    function addMovieOfTheDay() {
+        if (movieOfTheDay) {
+            db.ref('movies').orderByChild('name').equalTo(movieOfTheDay.name).once('value', snapshot => {
+                if (!snapshot.exists()) {
+                    db.ref('movies').push({
+                        name: movieOfTheDay.name,
+                        poster: movieOfTheDay.poster,
+                        genre: movieOfTheDay.genre,
+                        plot: movieOfTheDay.plot,
+                        actors: movieOfTheDay.actors,
+                        owner: currentUserId,
+                        ownerName: currentUserName,
+                        ownerPic: currentUserPic,
+                        likes: {},
+                        watchedBy: {},
+                        wannaWatchBy: {},
+                        lastUpdated: Date.now()
+                    }).then(() => {
+                        showToast(`"${movieOfTheDay.name}" added from Movie of the Day!`);
+                        addActivity(`added movie <strong>${movieOfTheDay.name}</strong> from Movie of the Day`);
+                        updateStreak(true);
+                    }).catch(error => {
+                        console.error("Error adding Movie of the Day:", error);
+                        showToast("Error adding movie.");
+                    });
+                } else {
+                    showToast(`"${movieOfTheDay.name}" is already on the list!`);
+                }
+            });
+        }
+    }
+    
+    async function showMovieDetails(movieKey) {
+        const movie = allMovies.find(m => m.key === movieKey);
+        if (!movie) return;
+
+        document.getElementById('detailTitle').textContent = movie.name;
+        document.getElementById('detailPoster').src = movie.poster;
+        document.getElementById('detailDescription').textContent = movie.plot || 'No description available.';
+        document.getElementById('detailGenre').textContent = movie.genre || 'Unknown';
+
+        const castListContainer = document.getElementById('castList');
+        castListContainer.innerHTML = '';
+        if (movie.actors && movie.actors.length > 0) {
+            document.getElementById('castSection').style.display = 'block';
+            for (const actor of movie.actors) {
+                const profileUrl = await fetchActorProfile(actor);
+                const castMember = document.createElement('div');
+                castMember.className = 'cast-member';
+                castMember.innerHTML = `
+                    <img src="${profileUrl}" alt="${actor} Profile">
+                    <span>${actor}</span>
+                `;
+                castListContainer.appendChild(castMember);
+            }
+        } else {
+            document.getElementById('castSection').style.display = 'none';
+        }
+        document.getElementById('movieDetailsModal').classList.add('visible');
+    }
+    
+    function addActivity(message) {
+        const activityList = document.getElementById('activityList');
+        const activityItem = document.createElement('div');
+        activityItem.className = 'activity-item';
+        activityItem.innerHTML = `<i class="fas fa-user-circle"></i> You ${message} <span class="time">${timeSince(Date.now())} ago</span>`;
+        if (activityList.firstChild) {
+            activityList.insertBefore(activityItem, activityList.firstChild);
+        } else {
+            activityList.appendChild(activityItem);
+        }
+        while(activityList.children.length > 10) {
+            activityList.removeChild(activityList.lastChild);
+        }
+    }
+
+    // --- Gamification Functions ---
+    function updateStreak(actionTaken = false) {
+        if (!currentUserId) return;
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayDateString = today.toDateString();
+    
+        const usersRef = db.ref(`users/${currentUserId}/streak`);
+    
+        usersRef.once('value', snapshot => {
+            let streak = snapshot.val() || { count: 0, lastDate: null };
+            const lastDate = streak.lastDate ? new Date(streak.lastDate) : null;
+    
+            if (actionTaken) {
+                if (lastDate && lastDate.toDateString() === todayDateString) {
+                    // Action taken on the same day, do nothing to the streak.
+                    // This is to prevent spamming from increasing streak count.
+                } else if (lastDate && (today - lastDate) < 86400000 * 2) {
+                    // It's a new day and the streak continues.
+                    streak.count++;
+                    streak.lastDate = todayDateString;
+                    checkMilestones(streak.count);
+                    showToast(`Streak continued! ${streak.count} days! 🔥`, 'streak-continue');
+                } else {
+                    // New streak or streak was broken.
+                    streak.count = 1;
+                    streak.lastDate = todayDateString;
+                    checkMilestones(streak.count);
+                    showToast(`New streak started! 1 day! 🤩`, 'streak-continue');
+                }
+            } else {
+                // Not an action, just a check on page load
+                if (!lastDate || (today - lastDate) >= 86400000 * 2) {
+                    if (streak.count > 0) {
+                        showToast(`Streak of ${streak.count} days lost. Let's start a new one!`, 'streak-reset');
+                    }
+                    streak.count = 0;
+                }
+            }
+    
+            currentStreakCount = streak.count;
+            db.ref(`users/${currentUserId}/streak`).set(streak);
+            
+            updateStreakDisplay(streak.count);
+            checkExclusiveBackground(streak.count);
+        });
+    }
+
+    function updateStreakDisplay(count) {
+        document.getElementById('streakCountModal').textContent = count;
+        const fireIcon = document.getElementById('streakFireIcon');
+        fireIcon.classList.remove('streak-level-7', 'streak-level-15', 'streak-level-30');
+        
+        if (count >= 30) {
+            fireIcon.classList.add('streak-level-30');
+            document.getElementById('discoveryBoostBtn').style.display = 'block';
+        } else if (count >= 15) {
+            fireIcon.classList.add('streak-level-15');
+            document.getElementById('discoveryBoostBtn').style.display = 'block';
+        } else if (count >= 7) {
+            fireIcon.classList.add('streak-level-7');
+            document.getElementById('discoveryBoostBtn').style.display = 'block';
+        } else {
+            document.getElementById('discoveryBoostBtn').style.display = 'none';
+        }
+        
+        // Update milestones in profile modal
+        if (count >= 7) document.getElementById('badge-7').classList.add('unlocked');
+        if (count >= 30) document.getElementById('badge-30').classList.add('unlocked');
+        if (count >= 100) document.getElementById('badge-100').classList.add('unlocked');
+    }
+    
+    function checkExclusiveBackground(count) {
+        if (count >= 30) {
+            document.body.classList.add('streak-level-30');
+        } else {
+            document.body.classList.remove('streak-level-30');
+        }
+    }
+    
+    function checkMilestones(count) {
+        if (count === 7) {
+            showToast("Milestone Unlocked! 7-Day Streak! 🎉", 'milestone');
+        } else if (count === 30) {
+            showToast("Milestone Unlocked! 30-Day Streak! 🏆", 'milestone');
+        } else if (count === 100) {
+            showToast("Milestone Unlocked! 100-Day Streak! 👑", 'milestone');
+        }
+    }
+
+    async function fetchRandomMoviesFromTMDb(count = 10) {
+      const page = Math.floor(Math.random() * 50) + 1;
+      const genreId = tmdbGenres[currentFilter.genre];
+      const url = `${tmdbBaseUrl}/discover/movie?api_key=${tmdbApiKey}&language=en-US&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}&with_genres=${genreId || ''}`;
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.results) {
+          movieDiscoveryPool = data.results.filter(movie => movie.poster_path).slice(0, count);
+          if (movieDiscoveryPool.length > 0) {
+            loadNextDiscoveryMovie();
+          } else {
+            showToast("No new movies found. Try another genre!");
+            closeDiscoveryGame();
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching movies from TMDb:", error);
+        showToast("Error fetching new movies. Please try again later.");
+        closeDiscoveryGame();
+      }
+    }
+
+    async function startDiscoveryGame(extraMovies = 0) {
+        movieDiscoveryPool = [];
+        document.getElementById('gameMovieTitle').textContent = "Finding Movies...";
+        document.getElementById('gameMoviePoster').src = "https://images.unsplash.com/photo-1596727147705-61849a613f17?q=80&w=1780";
+        document.getElementById('discoveryGameModal').classList.add('visible');
+        await fetchRandomMoviesFromTMDb(10 + extraMovies);
+    }
+
+    function loadNextDiscoveryMovie() {
+        if (movieDiscoveryPool.length === 0) {
+            showToast("That's all for now! Check back later for more movies.");
+            closeDiscoveryGame();
+            return;
+        }
+
+        const movie = movieDiscoveryPool.shift();
+        currentDiscoveryMovieKey = movie.id;
+
+        document.getElementById('gameMoviePoster').src = movie.poster_path ? `${tmdbImageBaseUrl}${movie.poster_path}` : 'https://images.unsplash.com/photo-1596727147705-61849a613f17?q=80&w=1780';
+        document.getElementById('gameMovieTitle').textContent = movie.title;
+    }
+
+    async function handleGameAction(action) {
+        if (!currentDiscoveryMovieKey) return;
+
+        const movieRef = db.ref('movies');
+        const movieName = document.getElementById('gameMovieTitle').textContent;
+        const existingMovie = allMovies.find(m => m.name === movieName);
+
+        if (existingMovie) {
+            if (action === 'watched') {
+                toggleWatched(existingMovie.key);
+            } else if (action === 'wanna-watch') {
+                toggleWannaWatch(existingMovie.key);
+            }
+        } else {
+            const movieDetails = await fetchMovieDetailsFromTMDb(currentDiscoveryMovieKey);
+            db.ref('movies').push({
+                name: movieDetails.name,
+                poster: movieDetails.poster,
+                genre: movieDetails.genre,
+                plot: movieDetails.plot,
+                actors: movieDetails.actors,
+                owner: currentUserId,
+                ownerName: currentUserName,
+                ownerPic: currentUserPic,
+                likes: {},
+                watchedBy: action === 'watched' ? { [currentUserId]: true } : {},
+                wannaWatchBy: action === 'wanna-watch' ? { [currentUserId]: true } : {},
+                lastUpdated: Date.now()
+            });
+            showToast(`Added "${movieDetails.name}" to your ${action === 'watched' ? 'watched' : 'wanna watch'} list!`);
+        }
+
+        updateStreak(true);
+        loadNextDiscoveryMovie();
+    }
+    
+    async function fetchMovieDetailsFromTMDb(tmdbId) {
+        const url = `${tmdbBaseUrl}/movie/${tmdbId}?api_key=${tmdbApiKey}&append_to_response=credits`;
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            const actors = data.credits.cast.slice(0, 5).map(actor => actor.name);
+            const genres = data.genres.map(genre => genre.name).join(', ');
+
+            return {
+                name: data.title,
+                poster: data.poster_path ? `${tmdbImageBaseUrl}${data.poster_path}` : 'https://images.unsplash.com/photo-1596727147705-61849a613f17?q=80&w=1780',
+                genre: genres || 'Unknown',
+                plot: data.overview || 'No description available.',
+                actors: actors
+            };
+        } catch (error) {
+            console.error("Error fetching movie details from TMDb:", error);
+            return { name: "Unknown", poster: "https://images.unsplash.com/photo-1596727147705-61849a613f17?q=80&w=1780", genre: 'Unknown', plot: 'No description available', actors: [] };
+        }
+    }
+
+
+    function closeDiscoveryGame() {
+        document.getElementById('discoveryGameModal').classList.remove('visible');
+        currentDiscoveryMovieKey = null;
+        movieDiscoveryPool = [];
+    }
+
+    // --- Login/Signup and Profile Functions ---
+    
+    function generateAvatarUrl(name) {
+        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4a90e2&color=fff&size=128&bold=true&font-size=0.5`;
+    }
+
+    function showLoginModal() {
+        document.getElementById('loginModal').classList.add('visible');
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').classList.remove('visible');
+    }
+    
+    function showProfileModal() {
+        if (!currentUserId) return;
+        document.getElementById('profilePicModal').src = currentUserPic;
+        document.getElementById('profileNameModal').textContent = currentUserName;
+        document.getElementById('profileModal').classList.add('visible');
+    }
+    
+    function showMainAppUI() {
+        document.getElementById('profileIcon').src = currentUserPic;
+        document.getElementById('profileIcon').style.display = 'block';
+    }
+    
+    function logout() {
+        localStorage.removeItem("currentUserId");
+        localStorage.removeItem("currentUserName");
+        localStorage.removeItem("currentUserPic");
+        location.reload();
+    }
+    
+    function previewProfilePic(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('profilePicPreview').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    async function handleLoginButtonClick() {
+        const name = document.getElementById('loginNameInput').value.trim();
+        const password = document.getElementById('loginPasswordInput').value.trim();
+        const profilePicFile = document.getElementById('profilePicFile').files[0];
+
+        if (!name || !password) {
+            showToast("Please enter a name and password.");
+            return;
+        }
+
+        const usersRef = db.ref('users');
+        const snapshot = await usersRef.orderByChild('name').equalTo(name).once('value');
+
+        if (snapshot.exists()) {
+            const userData = snapshot.val();
+            const userKey = Object.keys(userData)[0];
+            const user = userData[userKey];
+
+            if (user.password === password) {
+                currentUserId = userKey;
+                currentUserName = user.name;
+                currentUserPic = user.picUrl;
+                localStorage.setItem("currentUserId", currentUserId);
+                localStorage.setItem("currentUserName", currentUserName);
+                localStorage.setItem("currentUserPic", currentUserPic);
+                closeLoginModal();
+                loadMovies();
+                showMainAppUI();
+                showToast(`Welcome back, ${currentUserName}!`);
+            } else {
+                showToast("Incorrect password. Please try again.");
+            }
+        } else {
+            let newPicUrl = generateAvatarUrl(name);
+            if (profilePicFile) {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    newPicUrl = e.target.result;
+                    await createUser(name, password, newPicUrl);
+                };
+                reader.readAsDataURL(profilePicFile);
+            } else {
+                await createUser(name, password, newPicUrl);
+            }
+        }
+    }
+
+    async function createUser(name, password, picUrl) {
+      const usersRef = db.ref('users');
+      const newUserRef = usersRef.push();
+      const newUserId = newUserRef.key;
+
+      await newUserRef.set({
+          name: name,
+          password: password,
+          picUrl: picUrl,
+          streak: { count: 0, lastDate: null }
+      });
+
+      currentUserId = newUserId;
+      currentUserName = name;
+      currentUserPic = picUrl;
+      localStorage.setItem("currentUserId", currentUserId);
+      localStorage.setItem("currentUserName", currentUserName);
+      localStorage.setItem("currentUserPic", currentUserPic);
+      closeLoginModal();
+      loadMovies();
+      showMainAppUI();
+      showToast(`Account created! Welcome, ${currentUserName}!`);
+    }
+
+    // --- Event Listeners for new features ---
+    document.getElementById('settingsToggle').addEventListener('click', (e) => {
+        document.getElementById('settingsPanel').classList.toggle('open');
+        e.stopPropagation();
+    });
+    
+    document.getElementById('settingsPanel').addEventListener('click', (e) => {
+        e.stopPropagation();
+    });
+    document.getElementById('settingsPanel').addEventListener('touchmove', (e) => {
+        e.stopPropagation();
+    });
+    window.addEventListener('click', (e) => {
+      const settingsPanel = document.getElementById('settingsPanel');
+      if (settingsPanel.classList.contains('open') && !settingsPanel.contains(e.target) && !document.getElementById('settingsToggle').contains(e.target)) {
+        settingsPanel.classList.remove('open');
+      }
+      const suggestions = document.getElementById('suggestionsList');
+      const input = document.getElementById('movieName');
+      if (!suggestions.contains(e.target) && !input.contains(e.target)) {
+        suggestions.style.display = 'none';
+      }
+    });
+    
+    document.getElementById('profileIcon').addEventListener('click', showProfileModal);
+    
+    document.getElementById('passwordToggle').addEventListener('click', () => {
+        const passwordInput = document.getElementById('loginPasswordInput');
+        const passwordToggle = document.getElementById('passwordToggle');
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            passwordToggle.classList.remove('fa-eye');
+            passwordToggle.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            passwordToggle.classList.remove('fa-eye-slash');
+            passwordToggle.classList.add('fa-eye');
+        }
+    });
+
+    document.getElementById('genreFilter').addEventListener('change', (e) => {
+        currentFilter.genre = e.target.value;
+        saveFilters();
+        renderMovies();
+    });
+    
+    document.getElementById('sortOptions').addEventListener('change', (e) => {
+        currentFilter.sort = e.target.value;
+        saveFilters();
+        renderMovies();
+    });
+    
+    document.getElementById('myMoviesButton').addEventListener('click', (e) => {
+        currentFilter.myMovies = !currentFilter.myMovies;
+        e.target.classList.toggle('active', currentFilter.myMovies);
+        saveFilters();
+        renderMovies();
+    });
+    
+    document.getElementById('watchedMoviesButton').addEventListener('click', (e) => {
+        currentFilter.watchedMovies = !currentFilter.watchedMovies;
+        e.target.classList.toggle('active', currentFilter.watchedMovies);
+        saveFilters();
+        renderMovies();
+    });
+
+    document.getElementById('wannaWatchMoviesButton').addEventListener('click', (e) => {
+        currentFilter.wannaWatchMovies = !currentFilter.wannaWatchMovies;
+        e.target.classList.toggle('active', currentFilter.wannaWatchMovies);
+        saveFilters();
+        renderMovies();
+    });
+    
+    document.getElementById('searchBox').addEventListener('input', (e) => {
+        currentFilter.search = e.target.value;
+        renderMovies();
+    });
+    
+    function initializeFilterUI() {
+        document.getElementById('genreFilter').value = currentFilter.genre;
+        document.getElementById('sortOptions').value = currentFilter.sort;
+        document.getElementById('myMoviesButton').classList.toggle('active', currentFilter.myMovies);
+        document.getElementById('watchedMoviesButton').classList.toggle('active', currentFilter.watchedMovies);
+        document.getElementById('wannaWatchMoviesButton').classList.toggle('active', currentFilter.wannaWatchMovies);
+        document.getElementById('searchBox').value = currentFilter.search;
+    }
+    
+    document.getElementById("share-button").addEventListener("click", function () {
+      if (navigator.share) {
+        navigator.share({
+          title: "Movie Streak",
+          text: "Help me build a movie list!",
+          url: window.location.href
+        }).catch(error => console.log("Error sharing:", error));
+      } else {
+        prompt("Copy this link to share:", window.location.href);
+      }
+    });
+
+    window.addEventListener("DOMContentLoaded", () => {
+        if (currentUserId) {
+            closeLoginModal();
+            loadMovies();
+            initializeFilterUI();
+            showMainAppUI();
+        } else {
+            showLoginModal();
+        }
+    });
+  </script>
+
+</body>
+</html>
