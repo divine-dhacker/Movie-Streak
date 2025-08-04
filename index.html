@@ -1116,6 +1116,7 @@
       <button id="myMoviesButton">My Movies</button>
       <button id="watchedMoviesButton">Show Watched</button>
       <button id="wannaWatchMoviesButton">Wanna Watch</button>
+      <button id="resetFiltersButton" onclick="resetFilters()">Reset Filters</button>
     </div>
     
     <div class="activity-feed">
@@ -2319,6 +2320,21 @@
         document.getElementById('watchedMoviesButton').classList.toggle('active', currentFilter.watchedMovies);
         document.getElementById('wannaWatchMoviesButton').classList.toggle('active', currentFilter.wannaWatchMovies);
         document.getElementById('searchBox').value = currentFilter.search;
+    }
+
+    function resetFilters() {
+        currentFilter = {
+            genre: 'all',
+            sort: 'likes',
+            myMovies: false,
+            watchedMovies: false,
+            wannaWatchMovies: false,
+            search: ''
+        };
+        saveFilters();
+        initializeFilterUI();
+        renderMovies();
+        showToast("Filters have been reset.");
     }
     
     document.getElementById("share-button").addEventListener("click", function () {
