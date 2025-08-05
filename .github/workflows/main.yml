@@ -1,0 +1,15 @@
+name: Trigger Codemagic on app branch
+
+on:
+  push:
+    branches:
+      - app
+
+jobs:
+  trigger-codemagic:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Codemagic Webhook
+        run: |
+          curl -X POST https://api.codemagic.io/hooks/68920eee1b4fd64e92bde8c1
