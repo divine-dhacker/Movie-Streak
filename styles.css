@@ -403,14 +403,6 @@
         object-fit: cover;
         border: 2px solid var(--highlight-color);
         flex-shrink: 0;
-        vertical-align: middle;
-    }
-
-    .movie-meta {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        justify-content: flex-start;
     }
 
     .owner-profile.streak-leader {
@@ -1173,4 +1165,11 @@
             top: 15px;
             left: 15px;
         }
+    }
+
+    .movie-owner-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
     }
