@@ -395,14 +395,22 @@
     }
 
     .owner-profile {
-        width: 50px;
-        height: 50px;
-        max-width: 50px;
-        max-height: 50px;
+        width: 28px;
+        height: 28px;
+        max-width: 28px;
+        max-height: 28px;
         border-radius: 50%;
         object-fit: cover;
         border: 2px solid var(--highlight-color);
         flex-shrink: 0;
+        vertical-align: middle;
+    }
+
+    .movie-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        justify-content: flex-start;
     }
 
     .owner-profile.streak-leader {
