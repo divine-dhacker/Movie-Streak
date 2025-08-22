@@ -1187,3 +1187,9 @@
         text-overflow: ellipsis;
         display: block;
     }
+
+   .movie-card.streak-leader-card {
+    border: 3px solid var(--warn-color); /* use the streak leader color */
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.6); /* optional glowing effect */
+    border-radius: 12px;
+   }
