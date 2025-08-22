@@ -291,10 +291,9 @@ function renderMovies() {
     'movie-card',
     isOwner ? 'owner-card' : '',
     isWatched ? 'watched-card' : '',
-    isWannaWatch && !isWatched ? 'wanna-watch-card' : '',
-    isStreakLeader ? 'streak-leader-card' : ''   // ⭐ NEW
+    isWannaWatch && !isWatched ? 'wanna-watch-card' : ''
 ].filter(Boolean).join(' ');
-
+        
         const ownerName = movieUsers[movie.owner]?.name || 'Guest';
         const ownerPic = movieUsers[movie.owner]?.picUrl || 'https://i.imgur.com/your-default-pic.png';
 
