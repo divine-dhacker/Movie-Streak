@@ -288,11 +288,12 @@ function renderMovies() {
         const isWannaWatch = movie.wannaWatchBy && movie.wannaWatchBy[currentUserId];
 
         const cardClasses = [
-            'movie-card',
-            isOwner ? 'owner-card' : '',
-            isWatched ? 'watched-card' : '',
-            isWannaWatch && !isWatched ? 'wanna-watch-card' : ''
-        ].filter(Boolean).join(' ');
+    'movie-card',
+    isOwner ? 'owner-card' : '',
+    isWatched ? 'watched-card' : '',
+    isWannaWatch && !isWatched ? 'wanna-watch-card' : '',
+    isStreakLeader ? 'streak-leader-card' : ''   // ⭐ NEW
+].filter(Boolean).join(' ');
 
         const ownerName = movieUsers[movie.owner]?.name || 'Guest';
         const ownerPic = movieUsers[movie.owner]?.picUrl || 'https://i.imgur.com/your-default-pic.png';
