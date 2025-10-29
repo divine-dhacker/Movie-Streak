@@ -605,7 +605,7 @@
     }
 
     .discovery-game-btn,
-    .discoveryReel {
+    .discoveryReel, .chat {
         position: fixed;
         bottom: 12rem;
         right: 1.5rem;
@@ -1156,6 +1156,13 @@
 
         .discoveryReel {
             bottom: 8rem;
+            right: 0.75rem;
+            width: 50px;
+            height: 50px;
+        }
+
+        .chat {
+            bottom: 16rem;
             right: 0.75rem;
             width: 50px;
             height: 50px;
