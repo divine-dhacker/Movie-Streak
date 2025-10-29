@@ -368,6 +368,32 @@
             width: 60%;
         }
 
+        .home {
+        position: fixed;
+        bottom: 12rem;
+        right: 1.5rem;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: var(--highlight-color);
+        color: var(--bg-color);
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        z-index: 90;
+        cursor: pointer;
+        transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+         .home {
+            bottom: 16rem;
+            right: 0.75rem;
+            width: 50px;
+            height: 50px;
+         }
+
         /* FEATURE: Input Focus Highlight */
         .chat-input-area input[type="text"]:focus {
             border-color: var(--accent-color);
@@ -417,6 +443,7 @@
                 <button id="toggleSidebarBtn" class="action-button" onclick="toggleSidebar()" title="Toggle Sidebar" style="background: none; color: var(--secondary-text); width: 30px; height: 30px; font-size: 1rem; display: none;">
                     <i class="fas fa-chevron-left"></i>
                 </button>
+                <a href="chat.html"><i class="fas fa-home home"></i></a>
             </div>
             
             <div class="search-bar">
@@ -1097,4 +1124,5 @@
         });
     </script>
 </body>
+
 </html>
